@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AngebotListe.Mobile.Views.AngebotListePage"
+             Title="Angebote"
+             BackgroundColor="#F5F5F5">
+
+    <Grid Padding="10">
+        <RefreshView x:Name="refreshView" Refreshing="OnRefreshing">
+            <CollectionView x:Name="cvAngebote" SelectionMode="Single" SelectionChanged="OnSelectionChanged">
+                <CollectionView.EmptyView>
+                    <Label Text="Keine Angebote vorhanden" HorizontalOptions="Center"
+                           VerticalOptions="Center" TextColor="Gray" FontSize="14"/>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" StrokeThickness="0"
+                                StrokeShape="RoundRectangle 12" Margin="0,4" Padding="14">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Label Grid.Column="0" Text="📄" FontSize="32" VerticalOptions="Center"/>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                    <Label Text="{Binding AngebotNr}" FontSize="14" FontAttributes="Bold"/>
+                                    <Label Text="{Binding DatumFormatted}" FontSize="11" TextColor="Gray"/>
+                                </VerticalStackLayout>
+                                <Border Grid.Column="2" Background="#E8F5E9" StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 999" Padding="10,4" VerticalOptions="Center">
+                                    <Label Text="{Binding ProduktAnzahl, StringFormat='{0} ✓'}"
+                                           FontSize="11" FontAttributes="Bold" TextColor="#1B5E20"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,77 @@
+# ─────────────────────────────────────────────
+# Visual Studio / .NET / MAUI gitignore
+# ─────────────────────────────────────────────
+
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]uild/
+bld/
+out/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# MAUI / Mobile
+*.apk
+*.aab
+*.ipa
+*.app
+*.dSYM/
+
+# NuGet
+packages/
+!packages/repositories.config
+*.nupkg
+*.nuspec.bak
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Testing
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.coverage
+*.coveragexml
+
+# Keystore (signing keys — NEVER commit!)
+*.keystore
+*.jks
+*.p12
+*.pfx
+
+# IDE / Tools
+.idea/
+.vscode/launch.json
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Sensitive
+appsettings.Development.json
+secrets.json
+*.local.config
+
+# Logs
+*.log
+logs/
+
+# Temp
+*.tmp
+*.bak
+*.cache

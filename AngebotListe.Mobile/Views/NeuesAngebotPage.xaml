@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AngebotListe.Mobile.Views.NeuesAngebotPage"
+             Title="Neues Angebot"
+             BackgroundColor="#F5F5F5">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Padding="10">
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" StrokeThickness="0"
+                StrokeShape="RoundRectangle 12" Padding="14" Margin="0,0,0,8">
+            <Grid ColumnDefinitions="*,Auto">
+                <VerticalStackLayout Grid.Column="0" Spacing="4">
+                    <Label Text="AngebotNr:" FontSize="11" TextColor="Gray"/>
+                    <Label x:Name="lblAngebotNr" FontSize="16" FontAttributes="Bold" TextColor="#1B5E20"/>
+                </VerticalStackLayout>
+                <Border Grid.Column="1" Background="#E8F5E9" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 999" Padding="12,6" VerticalOptions="Center">
+                    <Label x:Name="lblBadge" Text="0 Produkte" FontSize="11"
+                           FontAttributes="Bold" TextColor="#1B5E20"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Suche -->
+        <SearchBar Grid.Row="1" x:Name="txtSuche" Placeholder="Produkt suchen..."
+                   TextChanged="OnSucheChanged" Margin="0,0,0,8"/>
+
+        <!-- Verfügbare Produkte (üstte) -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,*">
+            <Label Grid.Row="0" Text="VERFÜGBARE PRODUKTE — tippen zum hinzufügen"
+                   FontSize="10" FontAttributes="Bold" TextColor="Gray" Margin="4,0,0,4"/>
+            <CollectionView Grid.Row="1" x:Name="cvAlleProdukte" SelectionMode="Single"
+                            SelectionChanged="OnProduktSelected">
+                <CollectionView.EmptyView>
+                    <Label Text="Keine Produkte" HorizontalOptions="Center" VerticalOptions="Center" TextColor="Gray"/>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" StrokeThickness="0"
+                                StrokeShape="RoundRectangle 10" Margin="0,3" Padding="10">
+                            <Grid ColumnDefinitions="55,*,Auto" ColumnSpacing="10">
+                                <Border Grid.Column="0" StrokeShape="RoundRectangle 6" StrokeThickness="0"
+                                        Background="#EEE" WidthRequest="55" HeightRequest="55">
+                                    <Image Source="{Binding BildSource}" Aspect="AspectFill"/>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label Text="{Binding Name}" FontSize="13" FontAttributes="Bold"
+                                           LineBreakMode="TailTruncation"/>
+                                    <Label Text="{Binding Beschreibung}" FontSize="10" TextColor="Gray"
+                                           LineBreakMode="TailTruncation" MaxLines="1"/>
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="{Binding PreisFormatted}"
+                                       FontSize="14" FontAttributes="Bold" TextColor="#1B5E20"
+                                       VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+
+        <!-- Auswahl Liste (altta) -->
+        <Border Grid.Row="3" Background="#E8F5E9" StrokeThickness="0"
+                StrokeShape="RoundRectangle 12" Margin="0,8,0,0" Padding="8">
+            <Grid RowDefinitions="Auto,*">
+                <Label Grid.Row="0" Text="✓ AUSGEWÄHLTE PRODUKTE" FontSize="10"
+                       FontAttributes="Bold" TextColor="#1B5E20" Margin="4,0,0,4"/>
+                <CollectionView Grid.Row="1" x:Name="cvAuswahl" HeightRequest="180">
+                    <CollectionView.EmptyView>
+                        <Label Text="Noch nichts ausgewählt — tippen Sie oben ein Produkt an"
+                               FontSize="11" TextColor="Gray" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="White" StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 8" Margin="0,2" Padding="8">
+                                <Grid ColumnDefinitions="40,*,Auto,Auto" ColumnSpacing="8">
+                                    <Border Grid.Column="0" StrokeShape="RoundRectangle 4" StrokeThickness="0"
+                                            Background="#EEE" WidthRequest="40" HeightRequest="40">
+                                        <Image Source="{Binding BildSource}" Aspect="AspectFill"/>
+                                    </Border>
+                                    <Label Grid.Column="1" Text="{Binding Name}" FontSize="12" FontAttributes="Bold"
+                                           VerticalOptions="Center" LineBreakMode="TailTruncation"/>
+                                    <Label Grid.Column="2" Text="{Binding PreisFormatted}" FontSize="13"
+                                           FontAttributes="Bold" TextColor="#1B5E20" VerticalOptions="Center"/>
+                                    <Button Grid.Column="3" Text="✗" BackgroundColor="#F44336" TextColor="White"
+                                            WidthRequest="34" HeightRequest="34" CornerRadius="17"
+                                            Padding="0" FontSize="14" Clicked="OnEntfernenClicked"
+                                            CommandParameter="{Binding ProduktId}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Border>
+
+        <!-- Speichern (M3 Filled Button) -->
+        <Border Grid.Row="4" Background="{StaticResource M3Primary}" StrokeThickness="0"
+                StrokeShape="RoundRectangle 999" HeightRequest="56" Margin="0,8,0,0">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnSpeichernTapped"/>
+            </Border.GestureRecognizers>
+            <Grid ColumnDefinitions="Auto,*" Padding="24,0" HorizontalOptions="Center">
+                <Label Grid.Column="0" Text="💾" FontSize="22" VerticalOptions="Center"/>
+                <Label Grid.Column="1" Text="Angebot speichern" Margin="10,0,0,0"
+                       FontSize="15" FontAttributes="Bold" TextColor="White"
+                       VerticalOptions="Center"/>
+            </Grid>
+        </Border>
+
+    </Grid>
+
+</ContentPage>

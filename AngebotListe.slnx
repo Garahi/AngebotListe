@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="AngeboListeManangerSetup/AngeboListeManangerSetup.vdproj" Type="Installer">
+    <Build />
+  </Project>
+  <Project Path="AngebotListe/AngebotListe.vbproj" Id="153c07b5-5b82-4035-b056-a131b6f12ef1" />
+  <Project Path="AngebotListe.Mobile/AngebotListe.Mobile.csproj" />
+</Solution>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AngebotListe.Mobile.Views.AngebotDetailPage"
+             Title="Angebot Detail"
+             BackgroundColor="#F5F5F5">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="10">
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" StrokeThickness="0"
+                StrokeShape="RoundRectangle 16" Padding="16" Margin="0,0,0,8">
+            <Grid ColumnDefinitions="56,*">
+                <Border Grid.Column="0" Background="{StaticResource M3SecondaryContainer}"
+                        StrokeThickness="0" StrokeShape="RoundRectangle 999"
+                        WidthRequest="56" HeightRequest="56">
+                    <Label Text="📄" FontSize="28" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+                <VerticalStackLayout Grid.Column="1" Spacing="2" Margin="12,0,0,0" VerticalOptions="Center">
+                    <Label x:Name="lblNr" FontSize="18" FontAttributes="Bold"
+                           TextColor="{StaticResource M3OnSecondaryContainer}"/>
+                    <Label x:Name="lblDatum" FontSize="12" TextColor="{StaticResource M3OnSurfaceVariant}"/>
+                    <Label x:Name="lblAnzahl" FontSize="12" TextColor="{StaticResource M3OnSurfaceVariant}"/>
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <!-- Produkt Liste -->
+        <CollectionView Grid.Row="1" x:Name="cvProdukte" SelectionMode="Single"
+                        SelectionChanged="OnProduktSelected">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+                    <Label Text="📭" FontSize="48" HorizontalOptions="Center"/>
+                    <Label Text="Keine Produkte" FontSize="14" TextColor="Gray" HorizontalOptions="Center"/>
+                    <Label Text="Tippen Sie unten auf '+ Hinzufügen'" FontSize="11" TextColor="Gray" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Execute">
+                                <SwipeItem Text="🗑 Löschen" BackgroundColor="#F44336"
+                                           Invoked="OnSwipeDelete"
+                                           CommandParameter="{Binding ID}"/>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+                        <Border Background="White" StrokeThickness="0"
+                                StrokeShape="RoundRectangle 12" Margin="0,4" Padding="12">
+                            <Grid ColumnDefinitions="80,*,Auto" ColumnSpacing="12">
+                                <Border Grid.Column="0" StrokeShape="RoundRectangle 8" StrokeThickness="0"
+                                        Background="#EEE" WidthRequest="80" HeightRequest="80">
+                                    <Image Source="{Binding BildSource}" Aspect="AspectFill"/>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                    <Label Text="{Binding ProduktName}" FontSize="14" FontAttributes="Bold"
+                                           LineBreakMode="TailTruncation"/>
+                                    <Label Text="{Binding Beschreibung}" FontSize="11" TextColor="Gray"
+                                           LineBreakMode="TailTruncation" MaxLines="2"/>
+                                    <Label Text="◀ Wischen zum Löschen" FontSize="9" TextColor="#BBB"/>
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="{Binding PreisFormatted}"
+                                       FontSize="16" FontAttributes="Bold" TextColor="#1B5E20"
+                                       VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Action Bar (alt) — M3 Stil -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,Auto" RowSpacing="8" Margin="0,8,0,0">
+
+            <!-- Üst sıra: Hinzufügen + Teilen (M3 Filled Tonal Buttons) -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,*" ColumnSpacing="8">
+
+                <Border Grid.Column="0" Background="{StaticResource M3SecondaryContainer}"
+                        StrokeThickness="0" StrokeShape="RoundRectangle 999" HeightRequest="52">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnHinzufuegenTapped"/>
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*" Padding="20,0" HorizontalOptions="Center">
+                        <Label Grid.Column="0" Text="➕" FontSize="18" VerticalOptions="Center"/>
+                        <Label Grid.Column="1" Text="Hinzufügen" Margin="8,0,0,0"
+                               FontSize="14" FontAttributes="Bold"
+                               TextColor="{StaticResource M3OnSecondaryContainer}"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Background="#25D366"
+                        StrokeThickness="0" StrokeShape="RoundRectangle 999" HeightRequest="52">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTeilenTapped"/>
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*" Padding="20,0" HorizontalOptions="Center">
+                        <Label Grid.Column="0" Text="💬" FontSize="20" VerticalOptions="Center"/>
+                        <Label Grid.Column="1" Text="WhatsApp" Margin="8,0,0,0"
+                               FontSize="14" FontAttributes="Bold"
+                               TextColor="White"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Alt sıra: Löschen (M3 Outlined Error Button) -->
+            <Border Grid.Row="1" Background="#FFEBEE" StrokeThickness="1" Stroke="#FFCDD2"
+                    StrokeShape="RoundRectangle 999" HeightRequest="48">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnLoeschenTapped"/>
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto,*" Padding="20,0" HorizontalOptions="Center">
+                    <Label Grid.Column="0" Text="🗑" FontSize="18" VerticalOptions="Center"/>
+                    <Label Grid.Column="1" Text="Angebot löschen" Margin="8,0,0,0"
+                           FontSize="14" FontAttributes="Bold"
+                           TextColor="{StaticResource M3Error}" VerticalOptions="Center"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+
+</ContentPage>

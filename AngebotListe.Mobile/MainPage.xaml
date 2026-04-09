@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AngebotListe.Mobile.MainPage"
+             Title="AngebotListe"
+             BackgroundColor="{StaticResource M3Surface}">
+
+    <Grid RowDefinitions="Auto,*" Padding="20">
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Padding="0,24,0,24">
+            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                <Border Background="{StaticResource M3PrimaryContainer}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 999" WidthRequest="80" HeightRequest="80"
+                        HorizontalOptions="Center">
+                    <Label Text="📋" FontSize="42" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+                <Label Text="AngebotListe" FontSize="30" FontAttributes="Bold"
+                       TextColor="{StaticResource M3OnSurface}" HorizontalOptions="Center" Margin="0,8,0,0"/>
+                <Label x:Name="lblUser" FontSize="12"
+                       TextColor="{StaticResource M3OnSurfaceVariant}" HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+            <!-- Logout Button (sağ üst) -->
+            <Border Background="Transparent" Stroke="{StaticResource M3Outline}" StrokeThickness="1"
+                    StrokeShape="RoundRectangle 999" Padding="12,6"
+                    HorizontalOptions="End" VerticalOptions="Start" Margin="0,8,0,0">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnLogoutTapped"/>
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="4">
+                    <Label Grid.Column="0" Text="🚪" FontSize="14" VerticalOptions="Center"/>
+                    <Label Grid.Column="1" Text="Logout" FontSize="11" FontAttributes="Bold"
+                           TextColor="{StaticResource M3Primary}" VerticalOptions="Center"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Menu Cards -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="15">
+
+                <Border Background="White" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="20">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnProduktListeTapped"/>
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="15">
+                        <Label Grid.Column="0" Text="📦" FontSize="36" VerticalOptions="Center"/>
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label Text="Produkte" FontSize="18" FontAttributes="Bold"
+                                   TextColor="{StaticResource M3OnSurface}"/>
+                            <Label Text="Alle Produkte ansehen" FontSize="12"
+                                   TextColor="{StaticResource M3OnSurfaceVariant}"/>
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="{StaticResource IconChevronRight}"
+                               Style="{StaticResource MaterialIcon}" FontSize="28"
+                               TextColor="{StaticResource M3Primary}" VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
+                <Border Background="White" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="20">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAngeboteTapped"/>
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="56,*,Auto" ColumnSpacing="15">
+                        <Border Grid.Column="0" Background="{StaticResource M3SecondaryContainer}"
+                                StrokeThickness="0" StrokeShape="RoundRectangle 999"
+                                WidthRequest="56" HeightRequest="56">
+                            <Label Text="📄" FontSize="28" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label Text="Angebote" FontSize="18" FontAttributes="Bold"
+                                   TextColor="{StaticResource M3OnSurface}"/>
+                            <Label Text="Bestehende Angebote verwalten" FontSize="12"
+                                   TextColor="{StaticResource M3OnSurfaceVariant}"/>
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="›" FontSize="32" FontAttributes="Bold"
+                               TextColor="{StaticResource M3Primary}" VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
+                <Border Background="White" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="20">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnNeuesAngebotTapped"/>
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="56,*,Auto" ColumnSpacing="15">
+                        <Border Grid.Column="0" Background="#FFE7B0"
+                                StrokeThickness="0" StrokeShape="RoundRectangle 999"
+                                WidthRequest="56" HeightRequest="56">
+                            <Label Text="✨" FontSize="28" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label Text="Neues Angebot" FontSize="18" FontAttributes="Bold"
+                                   TextColor="{StaticResource M3OnSurface}"/>
+                            <Label Text="Schnell ein Angebot erstellen" FontSize="12"
+                                   TextColor="{StaticResource M3OnSurfaceVariant}"/>
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="›" FontSize="32" FontAttributes="Bold"
+                               TextColor="{StaticResource M3Primary}" VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>

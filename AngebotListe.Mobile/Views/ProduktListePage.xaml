@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AngebotListe.Mobile.Views.ProduktListePage"
+             Title="Produkte"
+             BackgroundColor="#F5F5F5">
+
+    <Grid RowDefinitions="Auto,*" Padding="10">
+
+        <SearchBar Grid.Row="0" x:Name="txtSuche" Placeholder="Suchen..."
+                   TextChanged="OnSucheChanged" Margin="0,0,0,8"/>
+
+        <RefreshView Grid.Row="1" x:Name="refreshView" Refreshing="OnRefreshing">
+            <CollectionView x:Name="cvProdukte" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <Label Text="Keine Produkte gefunden" HorizontalOptions="Center"
+                           VerticalOptions="Center" TextColor="Gray" FontSize="14"/>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" StrokeThickness="0"
+                                StrokeShape="RoundRectangle 12" Margin="0,4" Padding="12">
+                            <Grid ColumnDefinitions="80,*,Auto" ColumnSpacing="12">
+                                <Border Grid.Column="0" StrokeShape="RoundRectangle 8" StrokeThickness="0"
+                                        Background="#EEE" WidthRequest="80" HeightRequest="80">
+                                    <Image Source="{Binding BildSource}" Aspect="AspectFill"/>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                    <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold"
+                                           LineBreakMode="TailTruncation"/>
+                                    <Label Text="{Binding Beschreibung}" FontSize="11" TextColor="Gray"
+                                           LineBreakMode="TailTruncation" MaxLines="2"/>
+                                    <Label Text="{Binding Kategorie}" FontSize="10" TextColor="#1B5E20"/>
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="{Binding PreisFormatted}"
+                                       FontSize="16" FontAttributes="Bold" TextColor="#1B5E20"
+                                       VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+
+</ContentPage>

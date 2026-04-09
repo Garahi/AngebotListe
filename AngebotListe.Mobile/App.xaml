@@ -1,0 +1,68 @@
+﻿<?xml version = "1.0" encoding = "UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:AngebotListe.Mobile"
+             x:Class="AngebotListe.Mobile.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <!-- Material Icons — Codepoints (M3 Outlined Style)               -->
+            <!-- Quelle: https://fonts.google.com/icons                        -->
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <x:String x:Key="IconInventory">&#xe1a1;</x:String>      <!-- inventory_2 -->
+            <x:String x:Key="IconDescription">&#xe873;</x:String>    <!-- description -->
+            <x:String x:Key="IconAdd">&#xe145;</x:String>            <!-- add -->
+            <x:String x:Key="IconAddCircle">&#xe147;</x:String>      <!-- add_circle -->
+            <x:String x:Key="IconShare">&#xe80d;</x:String>          <!-- share -->
+            <x:String x:Key="IconDelete">&#xe872;</x:String>         <!-- delete -->
+            <x:String x:Key="IconEdit">&#xe3c9;</x:String>           <!-- edit -->
+            <x:String x:Key="IconSearch">&#xe8b6;</x:String>         <!-- search -->
+            <x:String x:Key="IconCheck">&#xe5ca;</x:String>          <!-- check -->
+            <x:String x:Key="IconClose">&#xe5cd;</x:String>          <!-- close -->
+            <x:String x:Key="IconArrowBack">&#xe5c4;</x:String>      <!-- arrow_back -->
+            <x:String x:Key="IconArrowForward">&#xe5c8;</x:String>   <!-- arrow_forward -->
+            <x:String x:Key="IconChevronRight">&#xe5cc;</x:String>   <!-- chevron_right -->
+            <x:String x:Key="IconCamera">&#xe3af;</x:String>         <!-- photo_camera -->
+            <x:String x:Key="IconImage">&#xe3f4;</x:String>          <!-- image -->
+            <x:String x:Key="IconRefresh">&#xe5d5;</x:String>        <!-- refresh -->
+            <x:String x:Key="IconHome">&#xe88a;</x:String>           <!-- home -->
+            <x:String x:Key="IconSave">&#xe161;</x:String>           <!-- save -->
+            <x:String x:Key="IconCart">&#xe8cc;</x:String>           <!-- shopping_cart -->
+            <x:String x:Key="IconReceipt">&#xeb8b;</x:String>        <!-- receipt_long -->
+            <x:String x:Key="IconWhatsapp">&#xe0c9;</x:String>       <!-- chat -->
+            <x:String x:Key="IconNoteAdd">&#xe89c;</x:String>        <!-- note_add -->
+
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <!-- M3 Style: Material Icon Label                                -->
+            <!-- Kullanım: Style="{StaticResource MaterialIcon}"               -->
+            <!--          Text="{StaticResource IconInventory}"                -->
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <Style x:Key="MaterialIcon" TargetType="Label">
+                <Setter Property="FontFamily" Value="MaterialSymbols"/>
+                <Setter Property="FontSize" Value="24"/>
+                <Setter Property="HorizontalTextAlignment" Value="Center"/>
+                <Setter Property="VerticalTextAlignment" Value="Center"/>
+            </Style>
+
+            <!-- M3 Color Palette (Light Theme — Blue) -->
+            <Color x:Key="M3Primary">#1565C0</Color>
+            <Color x:Key="M3PrimaryContainer">#D4E3FF</Color>
+            <Color x:Key="M3OnPrimaryContainer">#001C3A</Color>
+            <Color x:Key="M3Secondary">#4CAF50</Color>
+            <Color x:Key="M3SecondaryContainer">#E8F5E9</Color>
+            <Color x:Key="M3OnSecondaryContainer">#1B5E20</Color>
+            <Color x:Key="M3Surface">#FFFBFE</Color>
+            <Color x:Key="M3SurfaceVariant">#F4F4F5</Color>
+            <Color x:Key="M3OnSurface">#1C1B1F</Color>
+            <Color x:Key="M3OnSurfaceVariant">#49454F</Color>
+            <Color x:Key="M3Outline">#79747E</Color>
+            <Color x:Key="M3Error">#B3261E</Color>
+
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

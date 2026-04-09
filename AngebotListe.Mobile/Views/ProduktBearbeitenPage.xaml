@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AngebotListe.Mobile.Views.ProduktBearbeitenPage"
+             Title="Produkt bearbeiten"
+             BackgroundColor="#F5F5F5">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <!-- Resim önizleme -->
+            <Border Background="White" StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="0">
+                <Grid HeightRequest="240">
+                    <Image x:Name="imgVorschau" Aspect="AspectFit" BackgroundColor="#EEE"/>
+                    <Label x:Name="lblNoImage" Text="📷 Kein Bild" FontSize="20" TextColor="Gray"
+                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- Resim butonları (M3 Filled Tonal) -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <Border Grid.Column="0" Background="{StaticResource M3SecondaryContainer}"
+                        StrokeThickness="0" StrokeShape="RoundRectangle 999" HeightRequest="52">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnKameraTapped"/>
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*" Padding="20,0" HorizontalOptions="Center">
+                        <Label Grid.Column="0" Text="📷" FontSize="20" VerticalOptions="Center"/>
+                        <Label Grid.Column="1" Text="Kamera" Margin="8,0,0,0"
+                               FontSize="14" FontAttributes="Bold"
+                               TextColor="{StaticResource M3OnSecondaryContainer}"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Background="{StaticResource M3PrimaryContainer}"
+                        StrokeThickness="0" StrokeShape="RoundRectangle 999" HeightRequest="52">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnGalerieTapped"/>
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*" Padding="20,0" HorizontalOptions="Center">
+                        <Label Grid.Column="0" Text="🖼" FontSize="20" VerticalOptions="Center"/>
+                        <Label Grid.Column="1" Text="Galerie" Margin="8,0,0,0"
+                               FontSize="14" FontAttributes="Bold"
+                               TextColor="{StaticResource M3OnPrimaryContainer}"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Produkt Name -->
+            <Border Background="White" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Produkt Name" FontSize="11" TextColor="Gray"/>
+                    <Entry x:Name="txtName" FontSize="15"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Beschreibung -->
+            <Border Background="White" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Beschreibung" FontSize="11" TextColor="Gray"/>
+                    <Editor x:Name="txtBeschreibung" FontSize="14" HeightRequest="80" AutoSize="TextChanges"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Preis -->
+            <Border Background="White" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Preis (€)" FontSize="11" TextColor="Gray"/>
+                    <Entry x:Name="txtPreis" Keyboard="Numeric" FontSize="20" FontAttributes="Bold"
+                           TextColor="#1B5E20"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Aktion Butonları (M3) -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0">
+
+                <!-- Abbrechen — M3 Outlined -->
+                <Border Grid.Column="0" Background="Transparent" Stroke="{StaticResource M3Outline}"
+                        StrokeThickness="1" StrokeShape="RoundRectangle 999" HeightRequest="52">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAbbrechenTapped"/>
+                    </Border.GestureRecognizers>
+                    <Label Text="Abbrechen" FontSize="14" FontAttributes="Bold"
+                           TextColor="{StaticResource M3Primary}"
+                           HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+
+                <!-- Übernehmen — M3 Filled -->
+                <Border Grid.Column="1" Background="{StaticResource M3Primary}" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 999" HeightRequest="52">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnUebernehmenTapped"/>
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*" Padding="20,0" HorizontalOptions="Center">
+                        <Label Grid.Column="0" Text="✓" FontSize="20" FontAttributes="Bold"
+                               TextColor="White" VerticalOptions="Center"/>
+                        <Label Grid.Column="1" Text="Übernehmen" Margin="8,0,0,0"
+                               FontSize="14" FontAttributes="Bold" TextColor="White"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
