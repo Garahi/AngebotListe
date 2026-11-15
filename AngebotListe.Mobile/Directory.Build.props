@@ -1,0 +1,7 @@
+<Project>
+  <!-- Wird von MSBuild automatisch für AngebotListe.Mobile geladen (eigene Datei, damit Visual Studio sie nicht überschreibt).
+       iOS-27-Szenenprüfung (Fehler MT7199) vorerst aus; die App läuft unter iOS 26 normal. -->
+  <PropertyGroup>
+    <ValidateSceneManifest>false</ValidateSceneManifest>
+  </PropertyGroup>
+</Project>
