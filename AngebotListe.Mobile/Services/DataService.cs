@@ -106,17 +106,81 @@ public static class DataService
     // ═══════════════════════════════════════════════════════════════════
     // PRODUCTS
     // ═══════════════════════════════════════════════════════════════════
-    public static async Task<List<Product>> GetProductsAsync(string? search = null)
+    // Die Produktliste wird einmal geladen und 2 Minuten im Speicher gehalten;
+    // die Suche filtert dann direkt auf dem iPhone (vorher: Serveranfrage bei jedem Buchstaben).
+    private static List<Product>? _produkte;
+    private static DateTime _produkteZeit;
+
+    public static void ProdukteNeuLaden() => _produkte = null;
+
+    public static async Task<List<Product>> GetProductsAsync(string? search = null, bool neuLaden = false)
     {
         try
         {
-            var url = "/api/products" + (string.IsNullOrWhiteSpace(search) ? "" : "?search=" + Uri.EscapeDataString(search));
-            return await Laden<List<Product>>(url) ?? new();
+            if (neuLaden || _produkte == null || DateTime.Now - _produkteZeit > TimeSpan.FromMinutes(2))
+            {
+                _produkte = await Laden<List<Product>>("/api/products") ?? new();
+                _produkteZeit = DateTime.Now;
+            }
+            if (string.IsNullOrWhiteSpace(search)) return _produkte.ToList();
+            var s = search.Trim();
+            return _produkte.Where(p =>
+                    (p.Name ?? "").Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    (p.Beschreibung ?? "").Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    (p.Kategorie ?? "").Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    (p.ProduktNr ?? "").Contains(s, StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine("GetProductsAsync error: " + ex.Message);
-            return new();
+            return _produkte?.ToList() ?? new();
+        }
+    }
+
+    // Adresse des (verkleinerten) Produktbilds; Version sorgt dafür, dass ein geändertes Bild neu geladen wird
+    public static string BildUrl(int produktId, int version, int breite) =>
+        $"{ServerAdresse}/api/products/{produktId}/bild?w={breite}&v={version}&t={Uri.EscapeDataString(_token ?? "")}";
+
+    private record ProduktIdAntwort(int ProduktId);
+
+    // Neues Produkt anlegen (ProduktId = 0) oder vorhandenes ändern. Bild nur senden, wenn neu gewählt.
+    public static async Task<(bool Ok, string Meldung)> SaveProductAsync(Product p)
+    {
+        try
+        {
+            var body = new { p.ProduktNr, p.Name, p.Beschreibung, p.Preis, p.Kategorie, Bild = p.Bild };
+            using var res = p.ProduktId == 0
+                ? await Senden(HttpMethod.Post, "/api/products", body)
+                : await Senden(HttpMethod.Put, $"/api/products/{p.ProduktId}", body);
+            if (!res.IsSuccessStatusCode) return (false, await Fehlertext(res));
+            ProdukteNeuLaden();
+            return (true, "Gespeichert.");
+        }
+        catch (Exception ex)
+        {
+            return (false, "Server nicht erreichbar.\n" + ex.Message);
+        }
+    }
+
+    private record LoeschAntwort(bool Deaktiviert, int Verwendet);
+
+    // Löschen; wird das Produkt in Angeboten verwendet, deaktiviert der Server es stattdessen (wie am PC)
+    public static async Task<(bool Ok, string Meldung)> DeleteProductAsync(int produktId)
+    {
+        try
+        {
+            using var res = await Senden(HttpMethod.Delete, $"/api/products/{produktId}");
+            if (!res.IsSuccessStatusCode) return (false, await Fehlertext(res));
+            ProdukteNeuLaden();
+            var a = await res.Content.ReadFromJsonAsync<LoeschAntwort>(Json);
+            return a?.Deaktiviert == true
+                ? (true, $"Das Produkt wird in {a.Verwendet} Angebot(en) verwendet und wurde deshalb deaktiviert (nicht gelöscht).")
+                : (true, "Produkt gelöscht.");
+        }
+        catch (Exception ex)
+        {
+            return (false, "Server nicht erreichbar.\n" + ex.Message);
         }
     }
 

@@ -8,6 +8,7 @@
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using Microsoft.Data.SqlClient;
+using SkiaSharp;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -40,8 +41,10 @@ IResult Err(int status, string msg) => Results.Json(new { error = msg }, statusC
 Session? Auth(HttpRequest req)
 {
     var h = req.Headers.Authorization.ToString();
-    if (!h.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)) return null;
-    var token = h[7..].Trim();
+    string token;
+    if (h.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)) token = h[7..].Trim();
+    else if (req.Query.TryGetValue("t", out var qt) && !string.IsNullOrEmpty(qt)) token = qt.ToString();   // Bild-URLs (ohne Header)
+    else return null;
     if (sessions.TryGetValue(token, out var s))
     {
         if (s.Expires > DateTime.UtcNow) return s;
@@ -117,9 +120,12 @@ app.MapPost("/api/logout", (HttpRequest req) =>
 });
 
 // ---------------- Produkte ----------------
+// Liste OHNE Bilder (vorher kamen alle Fotos in voller Größe mit -> sehr langsam).
+// hatBild/bildVersion: die App lädt pro Produkt ein kleines Vorschaubild über /api/products/{id}/bild nach.
 app.MapGet("/api/products", (HttpRequest req, string? search) => Safe(req, async () =>
 {
-    var sql = "SELECT ProduktId, ProduktNr, Name, Beschreibung, Preis, Kategorie, Aktiv, Bild FROM Products WHERE Aktiv = 1";
+    var sql = "SELECT ProduktId, ProduktNr, Name, Beschreibung, Preis, Kategorie, Aktiv, " +
+              "CAST(ISNULL(DATALENGTH(Bild), 0) AS int) AS BildLaenge FROM Products WHERE Aktiv = 1";
     if (!string.IsNullOrWhiteSpace(search)) sql += " AND (Name LIKE @s OR Beschreibung LIKE @s OR CAST(ProduktNr AS nvarchar(100)) LIKE @s)";
     sql += " ORDER BY Name";
     await using var con = await Open();
@@ -128,6 +134,8 @@ app.MapGet("/api/products", (HttpRequest req, string? search) => Safe(req, async
     await using var rd = await cmd.ExecuteReaderAsync();
     var list = new List<object>();
     while (await rd.ReadAsync())
+    {
+        var len = Convert.ToInt32(rd["BildLaenge"]);
         list.Add(new
         {
             produktId = Convert.ToInt32(rd["ProduktId"]),
@@ -137,10 +145,117 @@ app.MapGet("/api/products", (HttpRequest req, string? search) => Safe(req, async
             preis = rd["Preis"] == DBNull.Value ? 0m : Convert.ToDecimal(rd["Preis"]),
             kategorie = rd["Kategorie"] as string,
             aktiv = rd["Aktiv"] != DBNull.Value && Convert.ToBoolean(rd["Aktiv"]),
-            bild = rd["Bild"] as byte[]
+            hatBild = len > 0,
+            bildVersion = len
         });
+    }
     return Results.Json(list);
 }));
+
+// Produktbild, auf Wunsch verkleinert (?w=240). Verkleinerte Bilder werden im Speicher zwischengespeichert.
+var bildCache = new ConcurrentDictionary<string, byte[]>();
+app.MapGet("/api/products/{id:int}/bild", (HttpRequest req, HttpResponse res, int id, int? w) => Safe(req, async () =>
+{
+    await using var con = await Open();
+    await using var cmd = new SqlCommand("SELECT Bild FROM Products WHERE ProduktId = @id", con);
+    cmd.Parameters.AddWithValue("@id", id);
+    if (await cmd.ExecuteScalarAsync() is not byte[] bild || bild.Length == 0) return Results.NotFound();
+    var breite = Math.Clamp(w ?? 0, 0, 2000);
+    var daten = breite == 0 ? bild : bildCache.GetOrAdd($"{id}:{bild.Length}:{breite}", _ => Verkleinern(bild, breite));
+    res.Headers.CacheControl = "private, max-age=2592000";
+    return Results.Bytes(daten, "image/jpeg");
+}));
+
+// Neues Produkt (wie im Windows-Programm "Produkte verwalten")
+app.MapPost("/api/products", (HttpRequest req, ProduktSpeichern p) => Safe(req, async () =>
+{
+    if (string.IsNullOrWhiteSpace(p.Name)) return Err(400, "Produktname fehlt.");
+    await using var con = await Open();
+    if (await ArtNrVergeben(con, p.ProduktNr, 0)) return Err(409, $"Die Artikelnummer {p.ProduktNr} ist schon vergeben.");
+    await using var cmd = new SqlCommand(
+        "INSERT INTO Products (ProduktNr, Name, Beschreibung, Preis, Bild, Kategorie, Aktiv, ErstelltAm) " +
+        "VALUES (@nr, @name, @beschr, @preis, @bild, @kat, 1, GETDATE()); SELECT CAST(SCOPE_IDENTITY() AS int);", con);
+    ProduktParameter(cmd, p);
+    var id = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+    Log($"Produkt angelegt: {id} {p.Name}");
+    return Results.Json(new { produktId = id });
+}));
+
+// Produkt ändern – Bild nur, wenn ein neues mitgeschickt wird; ErstelltAm bleibt unverändert
+app.MapPut("/api/products/{id:int}", (HttpRequest req, int id, ProduktSpeichern p) => Safe(req, async () =>
+{
+    if (string.IsNullOrWhiteSpace(p.Name)) return Err(400, "Produktname fehlt.");
+    await using var con = await Open();
+    if (await ArtNrVergeben(con, p.ProduktNr, id)) return Err(409, $"Die Artikelnummer {p.ProduktNr} ist schon vergeben.");
+    var neuesBild = p.Bild is { Length: > 0 };
+    await using var cmd = new SqlCommand(
+        "UPDATE Products SET ProduktNr = @nr, Name = @name, Beschreibung = @beschr, Preis = @preis, Kategorie = @kat" +
+        (neuesBild ? ", Bild = @bild" : "") + " WHERE ProduktId = @id", con);
+    ProduktParameter(cmd, p);
+    cmd.Parameters.AddWithValue("@id", id);
+    if (await cmd.ExecuteNonQueryAsync() == 0) return Err(404, "Produkt nicht gefunden.");
+    return Results.Json(new { produktId = id });
+}));
+
+// Löschen – wird das Produkt in Angeboten verwendet, wird es nur deaktiviert (sonst fehlen alte Angebote)
+app.MapDelete("/api/products/{id:int}", (HttpRequest req, int id) => Safe(req, async () =>
+{
+    await using var con = await Open();
+    int verwendet;
+    await using (var chk = new SqlCommand("SELECT COUNT(*) FROM AngebotProdukte WHERE ProduktID = @id", con))
+    {
+        chk.Parameters.AddWithValue("@id", id);
+        verwendet = Convert.ToInt32(await chk.ExecuteScalarAsync());
+    }
+    var sql = verwendet > 0 ? "UPDATE Products SET Aktiv = 0 WHERE ProduktId = @id" : "DELETE FROM Products WHERE ProduktId = @id";
+    await using var cmd = new SqlCommand(sql, con);
+    cmd.Parameters.AddWithValue("@id", id);
+    await cmd.ExecuteNonQueryAsync();
+    Log($"Produkt {(verwendet > 0 ? "deaktiviert" : "gelöscht")}: {id}");
+    return Results.Json(new { deaktiviert = verwendet > 0, verwendet });
+}));
+
+static async Task<bool> ArtNrVergeben(SqlConnection con, string? nr, int eigeneId)
+{
+    if (string.IsNullOrWhiteSpace(nr)) return false;
+    await using var cmd = new SqlCommand("SELECT COUNT(*) FROM Products WHERE CAST(ProduktNr AS nvarchar(100)) = @nr AND ProduktId <> @id", con);
+    cmd.Parameters.AddWithValue("@nr", nr.Trim());
+    cmd.Parameters.AddWithValue("@id", eigeneId);
+    return Convert.ToInt32(await cmd.ExecuteScalarAsync()) > 0;
+}
+
+static void ProduktParameter(SqlCommand cmd, ProduktSpeichern p)
+{
+    cmd.Parameters.AddWithValue("@nr", string.IsNullOrWhiteSpace(p.ProduktNr) ? DBNull.Value : (object)p.ProduktNr.Trim());
+    cmd.Parameters.AddWithValue("@name", p.Name!.Trim());
+    cmd.Parameters.AddWithValue("@beschr", (object?)p.Beschreibung?.Trim() ?? "");
+    cmd.Parameters.Add("@preis", System.Data.SqlDbType.Decimal).Value = p.Preis;
+    cmd.Parameters.Add("@bild", System.Data.SqlDbType.VarBinary, -1).Value = (object?)p.Bild ?? DBNull.Value;
+    cmd.Parameters.AddWithValue("@kat", (object?)p.Kategorie?.Trim() ?? "");
+}
+
+// Bild auf maximale Kantenlänge verkleinern (weißer Hintergrund für PNG mit Transparenz)
+static byte[] Verkleinern(byte[] bild, int max)
+{
+    try
+    {
+        using var bmp = SKBitmap.Decode(bild);
+        if (bmp == null) return bild;
+        float f = Math.Min(1f, (float)max / Math.Max(bmp.Width, bmp.Height));
+        int w = Math.Max(1, (int)(bmp.Width * f)), h = Math.Max(1, (int)(bmp.Height * f));
+        using var surface = SKSurface.Create(new SKImageInfo(w, h));
+        surface.Canvas.Clear(SKColors.White);
+        using (var img = SKImage.FromBitmap(bmp))
+            surface.Canvas.DrawImage(img, new SKRect(0, 0, w, h), new SKSamplingOptions(SKCubicResampler.Mitchell));
+        using var snap = surface.Snapshot();
+        using var data = snap.Encode(SKEncodedImageFormat.Jpeg, 82);
+        return data.ToArray();
+    }
+    catch
+    {
+        return bild;
+    }
+}
 
 // ---------------- Angebote ----------------
 app.MapGet("/api/angebote", (HttpRequest req) => Safe(req, async () =>
@@ -281,7 +396,9 @@ app.MapDelete("/api/positionen/{id:int}", (HttpRequest req, int id) => Safe(req,
 async Task InsertPosition(SqlConnection con, SqlTransaction? tx, int angebotId, ProduktDto p)
 {
     await using var cmd = new SqlCommand(
-        "INSERT INTO AngebotProdukte (AngebotID, ProduktID, ProduktName, Beschreibung, Preis, Bild) VALUES (@aid, @pid, @name, @desc, @preis, @bild)", con, tx);
+        "INSERT INTO AngebotProdukte (AngebotID, ProduktID, ProduktName, Beschreibung, Preis, Bild) " +
+        // Kein Bild mitgeschickt (App lädt die Liste ohne Bilder) -> Bild des Produkts übernehmen
+        "VALUES (@aid, @pid, @name, @desc, @preis, COALESCE(@bild, (SELECT Bild FROM Products WHERE ProduktId = @pid)))", con, tx);
     cmd.Parameters.AddWithValue("@aid", angebotId);
     cmd.Parameters.AddWithValue("@pid", p.ProduktId);
     cmd.Parameters.AddWithValue("@name", Db(p.Name));
@@ -298,3 +415,4 @@ record LoginBody(string? Username, string? Password);
 record ProduktDto(int ProduktId, string? Name, string? Beschreibung, decimal Preis, byte[]? Bild);
 record PositionDto(string? ProduktName, string? Beschreibung, decimal Preis, byte[]? Bild);
 record AngebotSpeichern(string AngebotNr, List<ProduktDto>? Produkte);
+record ProduktSpeichern(string? ProduktNr, string? Name, string? Beschreibung, decimal Preis, string? Kategorie, byte[]? Bild);

@@ -73,6 +73,21 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Nur in den Produkt-Stammdaten: Art.-Nr. und Kategorie -->
+            <Border x:Name="boxStamm" IsVisible="False" Background="White" StrokeThickness="0"
+                    StrokeShape="RoundRectangle 12" Padding="14">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout Grid.Column="0" Spacing="8">
+                        <Label Text="Art.-Nr." FontSize="11" TextColor="Gray"/>
+                        <Entry x:Name="txtProduktNr" FontSize="15"/>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="8">
+                        <Label Text="Kategorie" FontSize="11" TextColor="Gray"/>
+                        <Entry x:Name="txtKategorie" FontSize="15"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
             <!-- Aktion Butonları (M3) -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0">
 
@@ -102,6 +117,16 @@
                     </Grid>
                 </Border>
             </Grid>
+
+            <!-- Löschen (nur Stammdaten, nicht bei neuen Produkten) -->
+            <Border x:Name="btnLoeschen" IsVisible="False" Background="#FFEBEE" Stroke="#FFCDD2" StrokeThickness="1"
+                    StrokeShape="RoundRectangle 999" HeightRequest="48" Margin="0,4,0,12">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnLoeschenTapped"/>
+                </Border.GestureRecognizers>
+                <Label Text="🗑  Produkt löschen" FontSize="14" FontAttributes="Bold" TextColor="#C62828"
+                       HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Border>
 
         </VerticalStackLayout>
     </ScrollView>

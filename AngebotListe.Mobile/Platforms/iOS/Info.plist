@@ -46,5 +46,12 @@
 			</array>
 		</dict>
 	</dict>
+	<!-- Produktfotos: Kamera und Fotomediathek (ohne diese Texte stürzt iOS beim Öffnen der Kamera ab) -->
+	<key>NSCameraUsageDescription</key>
+	<string>Zum Fotografieren von Produkten für Angebote.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Zum Auswählen von Produktfotos aus der Mediathek.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Zum Speichern aufgenommener Produktfotos.</string>
 </dict>
 </plist>

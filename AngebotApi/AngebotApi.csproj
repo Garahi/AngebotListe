@@ -11,6 +11,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <!-- verkleinerte Produktbilder für die App -->
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
   </ItemGroup>
 
 </Project>
