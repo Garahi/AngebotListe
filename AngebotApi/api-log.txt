@@ -95,3 +95,8 @@
 15.11 19:58:37  GET /api/products/1/bild?w=240&v=23058&t=GK97fG6%2BqeoAAUbypDwLuJ8CHnG%2FbTwBYR0MGhu1h8s%3D = 200 (158 ms)
 15.11 19:58:37  GET /api/products/5/bild?w=240&v=12494&t=GK97fG6%2BqeoAAUbypDwLuJ8CHnG%2FbTwBYR0MGhu1h8s%3D = 200 (129 ms)
 15.11 19:58:37  GET /api/products/2/bild?w=240&v=74372&t=GK97fG6%2BqeoAAUbypDwLuJ8CHnG%2FbTwBYR0MGhu1h8s%3D = 200 (151 ms)
+15.11 20:03:59  GET /api/products = 200 (22 ms)
+15.11 20:05:02  Produkt angelegt: 14 Beispiel waren
+15.11 20:05:02  POST /api/products = 200 (3409 ms)
+15.11 20:05:04  GET /api/products = 200 (18 ms)
+15.11 20:05:07  GET /api/products/14/bild?w=240&v=158366&t=GK97fG6%2BqeoAAUbypDwLuJ8CHnG%2FbTwBYR0MGhu1h8s%3D = 200 (56 ms)
