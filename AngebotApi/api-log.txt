@@ -40,3 +40,4 @@
 15.11 17:39:40  GET /api/angebote = 200 (15 ms)
 15.11 17:39:42  GET /api/angebote/1002/produkte = 200 (50 ms)
 15.11 17:40:28  GET /api/angebote = 200 (16 ms)
+15.11 17:46:43  === AngebotListe API Start ===
