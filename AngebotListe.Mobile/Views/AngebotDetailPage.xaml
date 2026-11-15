@@ -21,6 +21,11 @@
                            TextColor="{StaticResource M3OnSecondaryContainer}"/>
                     <Label x:Name="lblDatum" FontSize="12" TextColor="{StaticResource M3OnSurfaceVariant}"/>
                     <Label x:Name="lblAnzahl" FontSize="12" TextColor="{StaticResource M3OnSurfaceVariant}"/>
+                    <Label x:Name="lblFirma" FontSize="12" TextColor="#006400" FontAttributes="Bold">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnFirmaTapped"/>
+                        </Label.GestureRecognizers>
+                    </Label>
                 </VerticalStackLayout>
             </Grid>
         </Border>

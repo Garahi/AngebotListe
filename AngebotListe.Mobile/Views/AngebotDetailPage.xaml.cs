@@ -1,7 +1,6 @@
 using AngebotListe.Mobile.Models;
 using AngebotListe.Mobile.Services;
 using System.Collections.ObjectModel;
-using System.Text;
 
 namespace AngebotListe.Mobile.Views;
 
@@ -18,6 +17,7 @@ public partial class AngebotDetailPage : ContentPage
 
         lblNr.Text = "📄 " + _angebot.AngebotNr;
         lblDatum.Text = "Datum: " + _angebot.DatumFormatted;
+        lblFirma.Text = AngebotBild.Firmenname;
     }
 
     protected override async void OnAppearing()
@@ -113,6 +113,7 @@ public partial class AngebotDetailPage : ContentPage
     }
 
     // ── Teilen (WhatsApp / Native Share) ────────────────
+    // Ein Bild im Stil des PC-PDFs (Firmenname oben, Produktkarten), bei vielen Produkten mehrere Bilder.
     private async void OnTeilenClicked(object sender, EventArgs e)
     {
         if (_produkte.Count == 0)
@@ -121,72 +122,30 @@ public partial class AngebotDetailPage : ContentPage
             return;
         }
 
-        // 1) Text mesajı oluştur
-        var sb = new StringBuilder();
-        sb.AppendLine($"📋 *Angebot: {_angebot.AngebotNr}*");
-        sb.AppendLine($"📅 {_angebot.DatumFormatted}");
-        sb.AppendLine();
-        decimal toplam = 0;
-        foreach (var ap in _produkte)
-        {
-            sb.AppendLine($"• *{ap.ProduktName}*  —  {ap.Preis:0.00} €");
-            if (!string.IsNullOrWhiteSpace(ap.Beschreibung))
-                sb.AppendLine($"  _{ap.Beschreibung}_");
-            toplam += ap.Preis;
-        }
-        sb.AppendLine();
-        sb.AppendLine($"💰 *Gesamt: {toplam:0.00} €*");
-
-        var text = sb.ToString();
-
-        // 2) Resimleri temp klasöre yaz (paylaşım için)
-        var tempDir = FileSystem.CacheDirectory;
-        var bildDateien = new List<ShareFile>();
-        int idx = 0;
-        foreach (var ap in _produkte)
-        {
-            if (ap.Bild is { Length: > 0 })
-            {
-                idx++;
-                var path = Path.Combine(tempDir, $"angebot_{_angebot.AngebotNr}_{idx}.jpg");
-                await File.WriteAllBytesAsync(path, ap.Bild);
-                bildDateien.Add(new ShareFile(path));
-            }
-        }
-
-        // 3) Share API ile paylaş
         try
         {
-            if (bildDateien.Count > 0)
+            var pfade = await AngebotBild.ErstellenAsync(_angebot, _produkte.ToList());
+            await Share.Default.RequestAsync(new ShareMultipleFilesRequest
             {
-                await Share.Default.RequestAsync(new ShareMultipleFilesRequest
-                {
-                    Title = _angebot.AngebotNr,
-                    Files = bildDateien,
-                    PresentationSourceBounds = new Rect(0, 0, 0, 0),
-                });
-
-                // Resimler gönderildikten sonra text'i de yolla
-                await Task.Delay(500);
-                await Share.Default.RequestAsync(new ShareTextRequest
-                {
-                    Title = _angebot.AngebotNr,
-                    Text = text,
-                });
-            }
-            else
-            {
-                await Share.Default.RequestAsync(new ShareTextRequest
-                {
-                    Title = _angebot.AngebotNr,
-                    Text = text,
-                });
-            }
+                Title = $"Angebot {_angebot.AngebotNr}",
+                Files = pfade.Select(x => new ShareFile(x, "image/jpeg")).ToList(),
+                PresentationSourceBounds = new Rect(0, 0, 0, 0),
+            });
         }
         catch (Exception ex)
         {
             await DisplayAlert("Fehler", "Teilen fehlgeschlagen:\n" + ex.Message, "OK");
         }
+    }
+
+    // ── Firmenname ändern (Tippen auf den Namen oben) ───
+    private async void OnFirmaTapped(object sender, TappedEventArgs e)
+    {
+        var neu = await DisplayPromptAsync("Firmenname", "Erscheint oben auf dem WhatsApp-Bild:",
+                                           "Speichern", "Abbrechen", initialValue: AngebotBild.Firmenname, maxLength: 60);
+        if (neu == null) return;
+        AngebotBild.Firmenname = neu;
+        lblFirma.Text = AngebotBild.Firmenname;
     }
 
     // ── Komple Angebot sil ──────────────────────────────

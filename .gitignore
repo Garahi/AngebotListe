@@ -75,3 +75,6 @@ logs/
 *.tmp
 *.bak
 *.cache
+
+# Fertige Setup-Dateien (gross, werden lokal erzeugt)
+deploy/cikti/

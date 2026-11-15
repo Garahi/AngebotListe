@@ -74,6 +74,8 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" Condition="$([MSBuild]::IsOSPlatform('osx'))" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+		<!-- Zeichnet das WhatsApp-Bild des Angebots -->
+		<PackageReference Include="SkiaSharp" Version="3.119.1" />
 	</ItemGroup>
 
 </Project>
