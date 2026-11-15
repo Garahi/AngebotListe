@@ -6,10 +6,30 @@ Public Class LoginForm2
     Public Property LoggedInUsername As String = ""
     Public Property LoggedInRole As String = ""
 
-    Private ReadOnly connectionString As String =
-        "Data Source=185.187.170.107;Initial Catalog=AngebotListe;" &
-        "User Id=salih;Password=Garahi1943;TrustServerCertificate=True;" &
-        "Encrypt=False;Connection Timeout=10;"
+    Private ReadOnly connectionString As String = Baglanti.AngebotListe
+
+    ' Zuletzt verwendeter Benutzername (das Passwort wird nie gespeichert)
+    Private Shared ReadOnly LetzterBenutzerDatei As String =
+        IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AngebotListe", "letzter_benutzer.txt")
+
+    Private Sub LoginForm2_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Try
+            If IO.File.Exists(LetzterBenutzerDatei) Then txtUsername.Text = IO.File.ReadAllText(LetzterBenutzerDatei).Trim()
+        Catch
+        End Try
+    End Sub
+
+    Private Sub LoginForm2_Shown(sender As Object, e As EventArgs) Handles MyBase.Shown
+        If txtUsername.Text = "" Then txtUsername.Focus() Else txtPassword.Focus()
+    End Sub
+
+    Private Sub BenutzernameMerken(name As String)
+        Try
+            IO.Directory.CreateDirectory(IO.Path.GetDirectoryName(LetzterBenutzerDatei))
+            IO.File.WriteAllText(LetzterBenutzerDatei, name)
+        Catch
+        End Try
+    End Sub
 
     Private Sub btnLogin_Click(sender As Object, e As EventArgs) Handles btnLogin.Click
         lblStatus.Text = ""
@@ -22,6 +42,8 @@ Public Class LoginForm2
             Return
         End If
 
+        btnLogin.Enabled = False
+        Me.Cursor = Cursors.WaitCursor
         Try
             Using con As New SqlConnection(connectionString)
                 con.Open()
@@ -60,13 +82,19 @@ Public Class LoginForm2
                         Me.LoggedInUserId = CInt(rd("Id"))
                         Me.LoggedInUsername = If(rd("Username") Is DBNull.Value, "", rd("Username").ToString())
                         Me.LoggedInRole = If(rd("Role") Is DBNull.Value, "User", rd("Role").ToString())
+                        BenutzernameMerken(Me.LoggedInUsername)
                         Me.DialogResult = DialogResult.OK
                         Me.Close()
                     End Using
                 End Using
             End Using
+        Catch ex As SqlException
+            lblStatus.Text = "Keine Verbindung zum Server. Bitte Internetverbindung prüfen."
         Catch ex As Exception
             lblStatus.Text = "Fehler: " & ex.Message
+        Finally
+            btnLogin.Enabled = True
+            Me.Cursor = Cursors.Default
         End Try
     End Sub
 

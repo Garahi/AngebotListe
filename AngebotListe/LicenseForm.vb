@@ -8,7 +8,13 @@
             Return
         End If
 
-        Dim dt As DataTable = Database.GetLicense(key)
+        Dim dt As DataTable
+        Try
+            dt = Database.GetLicense(key)
+        Catch ex As Exception
+            MessageBox.Show("Lizenzserver nicht erreichbar. Bitte Internetverbindung prüfen." & vbCrLf & ex.Message, "Lizenz", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End Try
 
         ' 🔥 TEST SATIRI — SQL’den GERÇEK ProgramName’i gösterir
         If dt.Rows.Count > 0 Then
@@ -53,13 +59,22 @@
             End If
         End If
 
-        ' 5) Lisans geçerli → programı aç
-        Dim f As New NeuesAngebotListeErstellen()
-        f.Show()
-        Me.Hide()
-
-        ' 6) HWID bağlama (ilk kullanımda)
+        ' 5) HWID bağlama (ilk kullanımda) – programı açmadan önce
         Database.BindHWID(key, currentHWID)
+
+        ' 6) Lisans geçerli → önce giriş (Login), sonra program.
+        '    Eskiden giriş atlanıyordu ve ana pencere kapanınca program arka planda açık kalıyordu.
+        Me.Hide()
+        Using login As New LoginForm2()
+            If login.ShowDialog() <> DialogResult.OK Then
+                Me.Close()
+                Return
+            End If
+            Sitzung.Anmelden(login.LoggedInUserId, login.LoggedInUsername, login.LoggedInRole)
+        End Using
+        Dim f As New NeuesAngebotListeErstellen()
+        AddHandler f.FormClosed, Sub() Me.Close()
+        f.Show()
 
     End Sub
 

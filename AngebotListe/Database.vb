@@ -5,7 +5,7 @@
 
 Public Class Database
 
-    Private Shared connectionString As String = "Data Source=185.187.170.107;Initial Catalog=SalihLicenseAdmin;Persist Security Info=True;User Id=salih;Password=Garahi1943;"
+    Private Shared ReadOnly connectionString As String = Baglanti.Lizenz
 
     Public Shared Function GetLicense(key As String) As DataTable
         Dim dt As New DataTable()

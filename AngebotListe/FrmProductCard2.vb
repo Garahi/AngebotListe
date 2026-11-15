@@ -32,7 +32,7 @@ Public Class FrmProductCard2
     Private Sub LoadProducts()
         Dim dt As New DataTable()
 
-        Using con As New SqlConnection("Data Source=185.187.170.107;Initial Catalog=AngebotListe;Persist Security Info=True;User Id=salih;Password=Garahi1943;")
+        Using con As New SqlConnection(Baglanti.AngebotListe)
             Using cmd As New SqlCommand("SELECT * FROM Products WHERE Aktiv = 1", con)
                 con.Open()
                 dt.Load(cmd.ExecuteReader())
@@ -269,7 +269,7 @@ Public Class FrmProductCard2
 
         ' 1️⃣ Otomatik AngebotNr üret
         Dim angebotNr As String
-        Using con As New SqlConnection("Data Source=185.187.170.107;Initial Catalog= AngebotListe;Persist Security Info=True;User Id=salih;Password=Garahi1943;")
+        Using con As New SqlConnection(Baglanti.AngebotListe)
             con.Open()
             Dim year As String = DateTime.Now.Year.ToString()
             Dim cmd As New SqlCommand("SELECT COUNT(*) FROM AngebotListe WHERE YEAR(Datum) = YEAR(GETDATE())", con)

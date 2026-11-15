@@ -141,6 +141,7 @@
     <Compile Include="ArtikelEinfügen.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Baglanti.vb" />
     <Compile Include="Database.vb" />
     <Compile Include="FirmaName.Designer.vb">
       <DependentUpon>FirmaName.vb</DependentUpon>
@@ -148,24 +149,20 @@
     <Compile Include="FirmaName.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.vb">
-      <DependentUpon>Form1.vb</DependentUpon>
+    <Compile Include="Einstellungen.vb" />
+    <Compile Include="FrmBenutzer.Designer.vb">
+      <DependentUpon>FrmBenutzer.vb</DependentUpon>
     </Compile>
-    <Compile Include="Form1.vb">
+    <Compile Include="FrmBenutzer.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form2.Designer.vb">
-      <DependentUpon>Form2.vb</DependentUpon>
+    <Compile Include="FrmEinstellungen.Designer.vb">
+      <DependentUpon>FrmEinstellungen.vb</DependentUpon>
     </Compile>
-    <Compile Include="Form2.vb">
+    <Compile Include="FrmEinstellungen.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrmProductCard2.Designer.vb">
-      <DependentUpon>FrmProductCard2.vb</DependentUpon>
-    </Compile>
-    <Compile Include="FrmProductCard2.vb">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="Sitzung.vb" />
     <Compile Include="FrmProduktSuche.Designer.vb">
       <DependentUpon>FrmProduktSuche.vb</DependentUpon>
     </Compile>
@@ -214,16 +211,13 @@
     <Compile Include="ProductCard.vb">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="NavKnopf.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Products.vb" />
     <Compile Include="Program.vb" />
     <Compile Include="RoundedButton.vb">
       <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SplashScreen1.Designer.vb">
-      <DependentUpon>SplashScreen1.vb</DependentUpon>
-    </Compile>
-    <Compile Include="SplashScreen1.vb">
-      <SubType>Form</SubType>
     </Compile>
     <Compile Include="SplashScreen2.Designer.vb">
       <DependentUpon>SplashScreen2.vb</DependentUpon>
@@ -231,6 +225,7 @@
     <Compile Include="SplashScreen2.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Tema.vb" />
     <Compile Include="WhiteProgressBar.vb">
       <SubType>Component</SubType>
     </Compile>
@@ -242,20 +237,14 @@
     <EmbeddedResource Include="FirmaName.resx">
       <DependentUpon>FirmaName.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Form2.resx">
-      <DependentUpon>Form2.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FrmProductCard2.resx">
-      <DependentUpon>FrmProductCard2.vb</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="FrmProduktSuche.resx">
       <DependentUpon>FrmProduktSuche.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LicenseForm.resx">
       <DependentUpon>LicenseForm.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LoginForm2.resx">
+      <DependentUpon>LoginForm2.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\AngebotReport.rdlc" />
     <EmbeddedResource Include="My Project\Report1.rdlc" />
@@ -270,9 +259,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ProductCard.resx">
       <DependentUpon>ProductCard.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SplashScreen1.resx">
-      <DependentUpon>SplashScreen1.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SplashScreen2.resx">
       <DependentUpon>SplashScreen2.vb</DependentUpon>

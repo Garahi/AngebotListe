@@ -1,4 +1,9 @@
 ﻿Public Class FirmaName
+    Private Sub FirmaName_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        TextBox1.Text = ProductCard.GlobalFirmaAdi
+        TextBox1.SelectAll()
+    End Sub
+
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
 
         Dim yeniFirmaAdi As String = TextBox1.Text.Trim()
@@ -9,8 +14,12 @@
         ' Global firma adını değiştir
         ProductCard.GlobalFirmaAdi = yeniFirmaAdi
 
-        ' Formdaki tüm ProductCard’ları yenile
-        RefreshAllProductCards(Me)
+        ' Tüm açık formlardaki ProductCard'ları yenile.
+        ' (Eskiden yalnızca bu küçük formun içinde aranıyordu; kartlar ana formda olduğu için hiçbiri yenilenmiyordu.)
+        For Each frm As Form In Application.OpenForms
+            If frm IsNot Me Then RefreshAllProductCards(frm)
+        Next
+        Me.DialogResult = DialogResult.OK
         ' Formu kapat
         Me.Close()
     End Sub

@@ -51,35 +51,34 @@ Partial Class ProductCard
         '
         'lblBeschreibung
         '
-        Me.lblBeschreibung.AutoSize = True
-        Me.lblBeschreibung.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.lblBeschreibung.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblBeschreibung.ForeColor = System.Drawing.Color.Black
-        Me.lblBeschreibung.Location = New System.Drawing.Point(5, 190)
-        Me.lblBeschreibung.MaximumSize = New System.Drawing.Size(380, 0)
+        Me.lblBeschreibung.AutoSize = False
+        Me.lblBeschreibung.Font = New System.Drawing.Font("Segoe UI", 9!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblBeschreibung.ForeColor = System.Drawing.Color.FromArgb(CType(CType(107, Byte), Integer), CType(CType(114, Byte), Integer), CType(CType(128, Byte), Integer))
+        Me.lblBeschreibung.Location = New System.Drawing.Point(12, 193)
+        Me.lblBeschreibung.AutoEllipsis = True
         Me.lblBeschreibung.Name = "lblBeschreibung"
-        Me.lblBeschreibung.Size = New System.Drawing.Size(96, 15)
+        Me.lblBeschreibung.Size = New System.Drawing.Size(276, 18)
         Me.lblBeschreibung.TabIndex = 2
-        Me.lblBeschreibung.Text = "lblBeschreibung"
+        Me.lblBeschreibung.Text = ""
         '
         'lblPreis
         '
         Me.lblPreis.AutoSize = True
-        Me.lblPreis.Font = New System.Drawing.Font("Segoe UI Symbol", 14.0!, System.Drawing.FontStyle.Bold)
-        Me.lblPreis.ForeColor = System.Drawing.Color.Black
-        Me.lblPreis.Location = New System.Drawing.Point(3, 162)
-        Me.lblPreis.MaximumSize = New System.Drawing.Size(380, 0)
+        Me.lblPreis.Font = New System.Drawing.Font("Segoe UI", 15!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblPreis.ForeColor = System.Drawing.Color.FromArgb(CType(CType(26, Byte), Integer), CType(CType(115, Byte), Integer), CType(CType(232, Byte), Integer))
+        Me.lblPreis.Location = New System.Drawing.Point(10, 220)
+        Me.lblPreis.Cursor = System.Windows.Forms.Cursors.Hand
         Me.lblPreis.Name = "lblPreis"
         Me.lblPreis.Size = New System.Drawing.Size(82, 25)
         Me.lblPreis.TabIndex = 3
-        Me.lblPreis.Text = "lblPreis"
+        Me.lblPreis.Text = "0,00 €"
         '
         'btnEinfügen
         '
         Me.btnEinfügen.BackColor = System.Drawing.Color.FromArgb(CType(CType(26, Byte), Integer), CType(CType(115, Byte), Integer), CType(CType(232, Byte), Integer))
         Me.btnEinfügen.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.btnEinfügen.ForeColor = System.Drawing.Color.White
-        Me.btnEinfügen.Location = New System.Drawing.Point(90, 141)
+        Me.btnEinfügen.Location = New System.Drawing.Point(12, 262)
         Me.btnEinfügen.Name = "btnEinfügen"
         Me.btnEinfügen.Size = New System.Drawing.Size(108, 28)
         Me.btnEinfügen.TabIndex = 8
@@ -89,23 +88,25 @@ Partial Class ProductCard
         '
         'lblName
         '
-        Me.lblName.AutoSize = True
-        Me.lblName.Font = New System.Drawing.Font("Segoe UI Symbol", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lblName.ForeColor = System.Drawing.Color.FromArgb(CType(CType(51, Byte), Integer), CType(CType(51, Byte), Integer), CType(CType(51, Byte), Integer))
-        Me.lblName.Location = New System.Drawing.Point(7, 141)
-        Me.lblName.MaximumSize = New System.Drawing.Size(380, 0)
+        Me.lblName.AutoSize = False
+        Me.lblName.Font = New System.Drawing.Font("Segoe UI", 11!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblName.ForeColor = System.Drawing.Color.FromArgb(CType(CType(31, Byte), Integer), CType(CType(41, Byte), Integer), CType(CType(55, Byte), Integer))
+        Me.lblName.Location = New System.Drawing.Point(12, 170)
+        Me.lblName.AutoEllipsis = True
         Me.lblName.Name = "lblName"
-        Me.lblName.Size = New System.Drawing.Size(60, 21)
+        Me.lblName.Size = New System.Drawing.Size(276, 22)
         Me.lblName.TabIndex = 1
-        Me.lblName.Text = "Name:"
+        Me.lblName.Text = ""
         '
         'txtPreisEdit
         '
         Me.txtPreisEdit.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.txtPreisEdit.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!)
-        Me.txtPreisEdit.Location = New System.Drawing.Point(117, 166)
+        Me.txtPreisEdit.Font = New System.Drawing.Font("Segoe UI", 12!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.txtPreisEdit.Location = New System.Drawing.Point(12, 222)
+        Me.txtPreisEdit.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
+        Me.txtPreisEdit.Visible = False
         Me.txtPreisEdit.Name = "txtPreisEdit"
-        Me.txtPreisEdit.Size = New System.Drawing.Size(93, 20)
+        Me.txtPreisEdit.Size = New System.Drawing.Size(110, 29)
         Me.txtPreisEdit.TabIndex = 11
         '
         'Button1
@@ -113,7 +114,7 @@ Partial Class ProductCard
         Me.Button1.BackColor = System.Drawing.Color.FromArgb(CType(CType(26, Byte), Integer), CType(CType(115, Byte), Integer), CType(CType(232, Byte), Integer))
         Me.Button1.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Button1.ForeColor = System.Drawing.Color.White
-        Me.Button1.Location = New System.Drawing.Point(201, 139)
+        Me.Button1.Location = New System.Drawing.Point(12, 262)
         Me.Button1.Name = "Button1"
         Me.Button1.Size = New System.Drawing.Size(82, 25)
         Me.Button1.TabIndex = 12
@@ -126,7 +127,7 @@ Partial Class ProductCard
         Me.btnDelete.BackColor = System.Drawing.Color.FromArgb(CType(CType(26, Byte), Integer), CType(CType(115, Byte), Integer), CType(CType(232, Byte), Integer))
         Me.btnDelete.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.btnDelete.ForeColor = System.Drawing.Color.White
-        Me.btnDelete.Location = New System.Drawing.Point(260, 195)
+        Me.btnDelete.Location = New System.Drawing.Point(12, 262)
         Me.btnDelete.Name = "btnDelete"
         Me.btnDelete.Size = New System.Drawing.Size(85, 23)
         Me.btnDelete.TabIndex = 13
@@ -136,12 +137,16 @@ Partial Class ProductCard
         '
         'btnProduktSuchen
         '
-        Me.btnProduktSuchen.BackColor = System.Drawing.Color.FromArgb(CType(CType(26, Byte), Integer), CType(CType(115, Byte), Integer), CType(CType(232, Byte), Integer))
-        Me.btnProduktSuchen.Font = New System.Drawing.Font("Microsoft Sans Serif", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnProduktSuchen.ForeColor = System.Drawing.Color.White
-        Me.btnProduktSuchen.Location = New System.Drawing.Point(260, 158)
+        Me.btnProduktSuchen.BackColor = System.Drawing.Color.White
+        Me.btnProduktSuchen.Font = New System.Drawing.Font("Segoe UI", 9!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnProduktSuchen.ForeColor = System.Drawing.Color.FromArgb(CType(CType(26, Byte), Integer), CType(CType(115, Byte), Integer), CType(CType(232, Byte), Integer))
+        Me.btnProduktSuchen.Location = New System.Drawing.Point(172, 221)
+        Me.btnProduktSuchen.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.btnProduktSuchen.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(225, Byte), Integer), CType(CType(229, Byte), Integer), CType(CType(235, Byte), Integer))
+        Me.btnProduktSuchen.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(232, Byte), Integer), CType(CType(240, Byte), Integer), CType(CType(254, Byte), Integer))
+        Me.btnProduktSuchen.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.btnProduktSuchen.Name = "btnProduktSuchen"
-        Me.btnProduktSuchen.Size = New System.Drawing.Size(120, 25)
+        Me.btnProduktSuchen.Size = New System.Drawing.Size(116, 30)
         Me.btnProduktSuchen.TabIndex = 14
         Me.btnProduktSuchen.Text = "Produkt wählen"
         Me.btnProduktSuchen.UseVisualStyleBackColor = False
@@ -152,9 +157,9 @@ Partial Class ProductCard
         Me.btnAction.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.btnAction.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.btnAction.ForeColor = System.Drawing.Color.White
-        Me.btnAction.Location = New System.Drawing.Point(1, 0)
+        Me.btnAction.Location = New System.Drawing.Point(0, 0)
         Me.btnAction.Name = "btnAction"
-        Me.btnAction.Size = New System.Drawing.Size(373, 46)
+        Me.btnAction.Size = New System.Drawing.Size(300, 40)
         Me.btnAction.TabIndex = 0
         Me.btnAction.Text = "My Fresh Fruit Yeşil GmbH"
         Me.btnAction.UseVisualStyleBackColor = False
@@ -163,9 +168,9 @@ Partial Class ProductCard
         '
         Me.pnlBottom.BackColor = System.Drawing.Color.RoyalBlue
         Me.pnlBottom.Controls.Add(Me.btnAction)
-        Me.pnlBottom.Location = New System.Drawing.Point(3, 208)
+        Me.pnlBottom.Location = New System.Drawing.Point(0, 262)
         Me.pnlBottom.Name = "pnlBottom"
-        Me.pnlBottom.Size = New System.Drawing.Size(373, 46)
+        Me.pnlBottom.Size = New System.Drawing.Size(300, 40)
         Me.pnlBottom.TabIndex = 15
         '
         'Label1
@@ -173,7 +178,7 @@ Partial Class ProductCard
         Me.Label1.AutoSize = True
         Me.Label1.Font = New System.Drawing.Font("Segoe UI Symbol", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label1.ForeColor = System.Drawing.Color.FromArgb(CType(CType(51, Byte), Integer), CType(CType(51, Byte), Integer), CType(CType(51, Byte), Integer))
-        Me.Label1.Location = New System.Drawing.Point(289, 141)
+        Me.Label1.Location = New System.Drawing.Point(12, 262)
         Me.Label1.MaximumSize = New System.Drawing.Size(380, 0)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(62, 21)
@@ -183,21 +188,22 @@ Partial Class ProductCard
         '
         'PictureBox3
         '
-        Me.PictureBox3.BackColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(224, Byte), Integer), CType(CType(192, Byte), Integer))
+        Me.PictureBox3.BackColor = System.Drawing.Color.White
         Me.PictureBox3.Cursor = System.Windows.Forms.Cursors.Hand
         Me.PictureBox3.Image = Global.AngebotListe.My.Resources.Resources.icons8_fenster_schließen_23
-        Me.PictureBox3.Location = New System.Drawing.Point(356, 0)
+        Me.PictureBox3.Location = New System.Drawing.Point(272, 6)
+        Me.PictureBox3.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage
         Me.PictureBox3.Name = "PictureBox3"
-        Me.PictureBox3.Size = New System.Drawing.Size(20, 20)
+        Me.PictureBox3.Size = New System.Drawing.Size(22, 22)
         Me.PictureBox3.TabIndex = 17
         Me.PictureBox3.TabStop = False
         '
         'PictureBox2
         '
-        Me.PictureBox2.BackColor = System.Drawing.Color.FromArgb(CType(CType(26, Byte), Integer), CType(CType(115, Byte), Integer), CType(CType(232, Byte), Integer))
+        Me.PictureBox2.BackColor = System.Drawing.Color.White
         Me.PictureBox2.Cursor = System.Windows.Forms.Cursors.Hand
         Me.PictureBox2.Image = Global.AngebotListe.My.Resources.Resources.edit_19x19
-        Me.PictureBox2.Location = New System.Drawing.Point(90, 166)
+        Me.PictureBox2.Location = New System.Drawing.Point(96, 227)
         Me.PictureBox2.Name = "PictureBox2"
         Me.PictureBox2.Size = New System.Drawing.Size(20, 20)
         Me.PictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
@@ -209,19 +215,21 @@ Partial Class ProductCard
         Me.PictureBox1.BackColor = System.Drawing.Color.White
         Me.PictureBox1.Cursor = System.Windows.Forms.Cursors.Hand
         Me.PictureBox1.Image = Global.AngebotListe.My.Resources.Resources.einfügen
-        Me.PictureBox1.Location = New System.Drawing.Point(355, 26)
+        Me.PictureBox1.Location = New System.Drawing.Point(272, 32)
+        Me.PictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage
         Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(20, 20)
+        Me.PictureBox1.Size = New System.Drawing.Size(22, 22)
         Me.PictureBox1.TabIndex = 9
         Me.PictureBox1.TabStop = False
         '
         'pbBild
         '
-        Me.pbBild.BackColor = System.Drawing.Color.White
+        Me.pbBild.BackColor = System.Drawing.Color.FromArgb(CType(CType(249, Byte), Integer), CType(CType(250, Byte), Integer), CType(CType(252, Byte), Integer))
         Me.pbBild.Dock = System.Windows.Forms.DockStyle.Top
         Me.pbBild.Location = New System.Drawing.Point(0, 0)
+        Me.pbBild.Cursor = System.Windows.Forms.Cursors.Hand
         Me.pbBild.Name = "pbBild"
-        Me.pbBild.Size = New System.Drawing.Size(380, 140)
+        Me.pbBild.Size = New System.Drawing.Size(300, 160)
         Me.pbBild.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
         Me.pbBild.TabIndex = 0
         Me.pbBild.TabStop = False
@@ -245,8 +253,10 @@ Partial Class ProductCard
         Me.Controls.Add(Me.lblPreis)
         Me.Controls.Add(Me.lblBeschreibung)
         Me.ForeColor = System.Drawing.Color.FromArgb(CType(CType(119, Byte), Integer), CType(CType(119, Byte), Integer), CType(CType(119, Byte), Integer))
+        Me.BackColor = System.Drawing.Color.White
+        Me.Margin = New System.Windows.Forms.Padding(8, 8, 8, 8)
         Me.Name = "ProductCard"
-        Me.Size = New System.Drawing.Size(380, 268)
+        Me.Size = New System.Drawing.Size(300, 262)
         Me.pnlBottom.ResumeLayout(False)
         CType(Me.PictureBox3, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).EndInit()

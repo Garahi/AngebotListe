@@ -10,7 +10,7 @@ Public Class ProductCard
     Public Property ParentPanel As FlowLayoutPanel
     Private CurrentProductCard As ProductCard
     Public Event PriceChanged(productID As Integer, newPrice As Decimal)
-    Public baglan As String = "Data Source=185.187.170.107;Initial Catalog= AngebotListe;Persist Security Info=True;User Id=salih;Password=Garahi1943;"
+    Public ReadOnly baglan As String = Baglanti.AngebotListe
     Public Event CardDeleted(ByVal sender As ProductCard)
     Public Event CardRemoved As EventHandler
     Public Property IsDeleted As Boolean = False
@@ -29,23 +29,40 @@ Public Class ProductCard
 
     Public Property ImagePath As String = ""
 
+    Private _produktName As String = ""
+    Private _beschreibung As String = ""
+
     Public Property ProduktName As String
         Get
-            Return lblName.Text
+            Return _produktName
         End Get
         Set(value As String)
-            lblName.Text = value
+            _produktName = If(value, "")
+            TexteAnzeigen()
         End Set
     End Property
 
     Public Property Beschreibung As String
         Get
-            Return lblBeschreibung.Text
+            Return _beschreibung
         End Get
         Set(value As String)
-            lblBeschreibung.Text = value
+            _beschreibung = If(value, "")
+            TexteAnzeigen()
         End Set
     End Property
+
+    ' Leere Karte: Hinweis anzeigen. Beschreibung ausblenden, wenn sie nur den Namen wiederholt.
+    Private Sub TexteAnzeigen()
+        If _produktName = "" Then
+            lblName.Text = "Noch kein Produkt gewählt"
+            lblName.ForeColor = Color.FromArgb(107, 114, 128)
+        Else
+            lblName.Text = _produktName
+            lblName.ForeColor = Color.FromArgb(31, 41, 55)
+        End If
+        lblBeschreibung.Text = If(String.Equals(_beschreibung.Trim(), _produktName.Trim(), StringComparison.CurrentCultureIgnoreCase), "", _beschreibung)
+    End Sub
 
     Private _preisValue As Decimal
 
@@ -57,8 +74,8 @@ Public Class ProductCard
             _preisValue = value
 
             ' Label güncelle
-            lblPreis.Text = value.ToString("0.##", Globalization.CultureInfo.GetCultureInfo("de-DE")) & " €"
-            lblPreis.Text = txtPreisEdit.Text
+            lblPreis.Text = value.ToString("N2", Globalization.CultureInfo.GetCultureInfo("de-DE")) & " €"
+            PictureBox2.Left = lblPreis.Right + 4
             ' ⭐ TextBox da güncellensin
             'txtPreisEdit.Text = value.ToString("0.##", Globalization.CultureInfo.GetCultureInfo("de-DE"))
         End Set
@@ -342,8 +359,21 @@ Public Class ProductCard
         Return bmp
     End Function
 
+    ' F9 (Firmenname ändern) ruft Refresh auf: Firmenname auf der Karte aktualisieren
+    Public Overrides Sub Refresh()
+        btnAction.Text = GlobalFirmaAdi
+        MyBase.Refresh()
+    End Sub
+
+    Protected Overrides Sub OnPaint(e As PaintEventArgs)
+        MyBase.OnPaint(e)
+        Using pen As New Pen(Color.FromArgb(225, 229, 235))
+            e.Graphics.DrawRectangle(pen, 0, 0, Width - 1, Height - 1)
+        End Using
+    End Sub
+
     Public Sub SetHighlight(active As Boolean)
-        Me.BackColor = If(active, Color.FromArgb(255, 230, 180), Color.White)
+        Me.BackColor = If(active, Color.FromArgb(232, 240, 254), Color.White)
     End Sub
 
     Private Sub ProductCard_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -351,7 +381,7 @@ Public Class ProductCard
         btnAction.FlatAppearance.BorderSize = 0
         btnAction.BackColor = Color.FromArgb(59, 89, 152)
         btnAction.ForeColor = Color.White
-        btnAction.Text = "My Fresh Fruit Yeşil GmbH"
+        btnAction.Text = GlobalFirmaAdi   ' vorher fest "My Fresh Fruit Yeşil GmbH" – F9-Änderung wirkte nicht
         btnAction.Cursor = Cursors.Hand
         'Burasi neue angebotta görünmesin diye 
         If DisplayMode = "AngebotListe" Then
@@ -361,15 +391,6 @@ Public Class ProductCard
             btnAction.Visible = False
             pnlBottom.Visible = False
             btnProduktSuchen.Visible = True
-
-            ' 🔹 AutoSize ve layout etkilerini kapat
-            btnProduktSuchen.AutoSize = False
-            btnProduktSuchen.Anchor = AnchorStyles.Top Or AnchorStyles.Left
-            btnProduktSuchen.Dock = DockStyle.None
-
-            ' 🔹 Boyut ve konumu ayarla
-            btnProduktSuchen.Size = New Size(120, 32)
-            btnProduktSuchen.Location = New Point(txtPreisEdit.Right + 5, txtPreisEdit.Top - 5) ' 5px yukarı
         Else
 
             '    btnEinfügen.Visible = True
@@ -380,11 +401,13 @@ Public Class ProductCard
             btnProduktSuchen.Visible = True
             btnAction.Visible = True
             pnlBottom.Visible = True
-            btnProduktSuchen.AutoSize = False
-            btnProduktSuchen.Anchor = AnchorStyles.Top Or AnchorStyles.Left
-            btnProduktSuchen.Dock = DockStyle.None
-            btnProduktSuchen.Size = New Size(120, 32)
-            btnProduktSuchen.Location = New Point(txtPreisEdit.Right + 5, txtPreisEdit.Top)
+            Height = pnlBottom.Bottom   ' Firmenleiste unten anzeigen
+        End If
+        TexteAnzeigen()
+        btnProduktSuchen.Text = If(ProductID.GetValueOrDefault() > 0, "Ändern", "Produkt wählen")
+        If ProductID.GetValueOrDefault() = 0 Then
+            btnProduktSuchen.BackColor = Color.FromArgb(26, 115, 232)
+            btnProduktSuchen.ForeColor = Color.White
         End If
 
 
@@ -417,12 +440,19 @@ Public Class ProductCard
         Dim parentForm As Form = Me.FindForm()
         Dim searchForm As New FrmProduktSuche()
 
-        searchForm.StartPosition = FormStartPosition.Manual
-        searchForm.Location = parentForm.Location
+        searchForm.StartPosition = FormStartPosition.CenterParent
 
         If searchForm.ShowDialog(parentForm) = DialogResult.OK AndAlso searchForm.SelectedProduct IsNot Nothing Then
+            ProduktUebernehmen(searchForm.SelectedProduct)
+        End If
+    End Sub
 
-            Dim selectedProduct As DataRow = searchForm.SelectedProduct
+    ' Füllt die Karte mit einem Produkt aus der Produktsuche (auch für "Produkte hinzufügen" mit Mehrfachauswahl)
+    Public Sub ProduktUebernehmen(selectedProduct As DataRow)
+        If selectedProduct Is Nothing Then Return
+        btnProduktSuchen.Text = "Ändern"
+        btnProduktSuchen.BackColor = Color.White
+        btnProduktSuchen.ForeColor = Color.FromArgb(26, 115, 232)
 
             ' 🔍 Güvenli kolon bulma fonksiyonu
             Dim productIdColumn As String = GetExistingColumn(selectedProduct, {"ID", "ProduktID", "ProductID", "ArtikelID", "ArtNr"})
@@ -462,7 +492,6 @@ Public Class ProductCard
             ' ❌ BU SATIR KESİNLİKLE SİLİNDİ
             ' txtPreisEdit.Text = SafeGetDecimal(selectedProduct, "Preis")
 
-        End If
     End Sub
 
     ' ---------------------------------------------------------
@@ -505,7 +534,14 @@ Public Class ProductCard
         End If
     End Sub
 
-    Private Sub PictureBox2_Click(sender As Object, e As EventArgs) Handles PictureBox2.Click
+    Private Sub txtPreisEdit_KeyDown(sender As Object, e As KeyEventArgs) Handles txtPreisEdit.KeyDown
+        If e.KeyCode = Keys.Enter OrElse e.KeyCode = Keys.Escape Then
+            e.SuppressKeyPress = True
+            btnProduktSuchen.Focus()   ' löst Leave aus → Preis wird übernommen
+        End If
+    End Sub
+
+    Private Sub PictureBox2_Click(sender As Object, e As EventArgs) Handles PictureBox2.Click, lblPreis.Click
         Dim raw As String = lblPreis.Text.Replace("€", "").Trim()
 
         Dim value As Decimal
@@ -515,10 +551,14 @@ Public Class ProductCard
                  value)
 
         txtPreisEdit.Text = value.ToString("0.##", Globalization.CultureInfo.GetCultureInfo("de-DE"))
+        txtPreisEdit.Text = Preis.ToString("0.00", Globalization.CultureInfo.GetCultureInfo("de-DE"))
         txtPreisEdit.Visible = True
+        txtPreisEdit.BringToFront()
         txtPreisEdit.Focus()
+        txtPreisEdit.SelectAll()
 
         lblPreis.Visible = False   ' düzenleme modunda gizle
+        PictureBox2.Visible = False
     End Sub
 
     Public Property ShowActionButtons As Boolean
@@ -579,8 +619,9 @@ Public Class ProductCard
 
 
     Private Sub txtPreisEdit_TextChanged(sender As Object, e As EventArgs) Handles txtPreisEdit.TextChanged
+        If Not txtPreisEdit.Focused Then Return   ' nur echte Eingaben des Benutzers
         Dim newPreis As Decimal
-        If Decimal.TryParse(txtPreisEdit.Text, Globalization.NumberStyles.Any, Globalization.CultureInfo.InvariantCulture, newPreis) Then
+        If Decimal.TryParse(txtPreisEdit.Text.Replace(".", ","), Globalization.NumberStyles.Number, Globalization.CultureInfo.GetCultureInfo("de-DE"), newPreis) Then
             Me.Preis = newPreis
             Me.IsEdited = True
             ' Ana forma bildir
@@ -591,8 +632,8 @@ Public Class ProductCard
     Private Sub txtPreisEdit_Leave(sender As Object, e As EventArgs) Handles txtPreisEdit.Leave
         Dim value As Decimal
 
-        If Decimal.TryParse(txtPreisEdit.Text,
-                        Globalization.NumberStyles.Any,
+        If Decimal.TryParse(txtPreisEdit.Text.Replace(".", ","),
+                        Globalization.NumberStyles.Number,
                         Globalization.CultureInfo.GetCultureInfo("de-DE"),
                         value) Then
 
@@ -601,6 +642,7 @@ Public Class ProductCard
 
         txtPreisEdit.Visible = False
         lblPreis.Visible = True   ' ⭐ LABEL GERİ GELİYOR
+        PictureBox2.Visible = True
     End Sub
 
     'Public Event CardDeleted(ByVal sender As ProductCard)

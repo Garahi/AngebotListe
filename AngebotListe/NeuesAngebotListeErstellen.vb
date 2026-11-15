@@ -66,7 +66,7 @@ Public Class NeuesAngebotListeErstellen
     Private isInternalUpdate As Boolean = False
     Public DeletedCards As New List(Of ProductCard)
     Private selectedCards As New List(Of ProductCard)
-    Private connectionString As String = "Server=185.187.170.107;Database=AngebotListe;User Id=salih;Password=Garahi1943;"
+    Private ReadOnly connectionString As String = Baglanti.AngebotListe
     Private headerCheckBox As New CheckBox()
     Private headerCheckBoxState As Boolean = False
     Public AngebetNr As String
@@ -101,36 +101,13 @@ Public Class NeuesAngebotListeErstellen
                 col.ReadOnly = True
             End If
         Next
-        '=========================
-        'formun büyümemesi icin 
-
-        Me.WindowState = FormWindowState.Normal
-        Me.FormBorderStyle = FormBorderStyle.FixedSingle
-        Me.MaximizeBox = False
-
-        ' Formu tamamen sabitle
-        Dim f As Size = Me.Size
-        Me.MinimumSize = f
-        Me.MaximumSize = f
+        ' Fenster ist frei skalierbar (Kopf-, Inhalts- und Fußbereich passen sich an).
+        ' Position, Mindestgröße, Symbol und F9-Taste kommen aus dem Designer.
         DATAGRİD_1_RENKLENDIR()
-        '================================= ortala =========================
-        Me.StartPosition = FormStartPosition.Manual
 
-        Dim screenWidth As Integer = Screen.PrimaryScreen.WorkingArea.Width
-        Dim screenHeight As Integer = Screen.PrimaryScreen.WorkingArea.Height
-
-        Dim formWidth As Integer = Me.Width
-        Dim formHeight As Integer = Me.Height
-
-        Me.Location = New Point(
-            (screenWidth - formWidth) \ 2,
-            (screenHeight - formHeight) \ 2
-        )
-        ' bunu yapiyorum ki  f9 ile firmaname formunu acabilmek icin '
-        Me.KeyPreview = True
-        Me.Icon = New Icon("C:\AngebotListe\İcon\SalihS48x48.ico")
-
-
+        SeitenleisteEinrichten()
+        TabelleSichtbarkeit()
+        SetzeSpeicherStatus(False)
     End Sub
     Public Sub New()
         InitializeComponent()
@@ -138,36 +115,175 @@ Public Class NeuesAngebotListeErstellen
         Dim exePath As String = Application.ExecutablePath
         Me.Icon = Icon.ExtractAssociatedIcon(exePath)
     End Sub
-    Private Sub NeuesAngebotListeErstellen_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
-        If e.KeyCode = Keys.F9 Then
+    Protected Overrides Function ProcessCmdKey(ByRef msg As Message, keyData As System.Windows.Forms.Keys) As Boolean
+        If keyData = System.Windows.Forms.Keys.F9 Then
+            BeginInvoke(New Action(Sub() ZeigeSeite(navEinstellungen)))
+            Return True
+        End If
+        If keyData = System.Windows.Forms.Keys.F8 Then
+            BeginInvoke(New Action(Sub() ZeigeSeite(navProdukte)))
+            Return True
+        End If
+        Return MyBase.ProcessCmdKey(msg, keyData)
+    End Function
 
-            Dim frm As New FirmaName()
+    ' ───────────── Linke Navigationsleiste ─────────────
+    ' Produkte, Einstellungen und Benutzer sind eigene Formulare (im Designer gestaltet).
+    ' Sie werden hier ohne Rahmen in den Inhaltsbereich (pnlHost) eingebettet.
 
-            ' Formu her zaman ortada aç
-            frm.StartPosition = FormStartPosition.CenterParent
+    Private aktiveSeite As Form
 
-            ' Bu formun önünde açılması için System.InvalidCaSystem.InvalidCastException: stException: ShowDialog kullan
-            frm.ShowDialog(Me)
+    Private Sub SeitenleisteEinrichten()
+        navBenutzer.Visible = Sitzung.IstAdmin
+        Dim name As String = If(Sitzung.Benutzername = "", "Benutzer", Sitzung.Benutzername)
+        lblBenutzerName.Text = name & If(Sitzung.IstAdmin, "  · Admin", "")
+        lblInitialen.Text = Initialen(name)
+        Dim tt As New ToolTip()
+        tt.SetToolTip(navProdukte, "Produkte verwalten (F8)")
+        tt.SetToolTip(navEinstellungen, "Einstellungen (F9)")
+    End Sub
 
+    Private Shared Function Initialen(name As String) As String
+        Dim teile = name.Split({" "c, "."c, "_"c, "-"c}, StringSplitOptions.RemoveEmptyEntries)
+        If teile.Length >= 2 Then Return (teile(0)(0) & teile(1)(0)).ToUpper()
+        Return If(name.Length >= 2, name.Substring(0, 2), name).ToUpper()
+    End Function
+
+    Private Sub Nav_Click(sender As Object, e As EventArgs) Handles navAngebote.Click, navProdukte.Click, navEinstellungen.Click, navBenutzer.Click
+        ZeigeSeite(DirectCast(sender, NavKnopf))
+    End Sub
+
+    Private Sub ZeigeSeite(knopf As NavKnopf)
+        If knopf Is navBenutzer AndAlso Not Sitzung.IstAdmin Then Return
+        For Each n In {navAngebote, navProdukte, navEinstellungen, navBenutzer}
+            n.Aktiv = (n Is knopf)
+        Next
+
+        ' Vorherige Seite schließen (Daten werden beim nächsten Öffnen frisch geladen)
+        If aktiveSeite IsNot Nothing Then
+            RemoveHandler aktiveSeite.FormClosed, AddressOf Seite_FormClosed
+            aktiveSeite.Close()
+            aktiveSeite.Dispose()
+            aktiveSeite = Nothing
+        End If
+
+        If knopf Is navAngebote Then
+            pnlHost.Visible = False
+            pnlAngebot.Visible = True
+            ' Firmenname könnte in den Einstellungen geändert worden sein
+            For Each karte In FlowLayoutPanel1.Controls.OfType(Of ProductCard)()
+                karte.Refresh()
+            Next
+            Return
+        End If
+
+        Dim frm As Form
+        If knopf Is navProdukte Then
+            frm = New ArtikelEinfügen()
+        ElseIf knopf Is navEinstellungen Then
+            frm = New FrmEinstellungen()
+        Else
+            frm = New FrmBenutzer()
+        End If
+        frm.TopLevel = False
+        frm.MinimumSize = Size.Empty
+        frm.FormBorderStyle = FormBorderStyle.None
+        frm.Dock = DockStyle.Fill
+        AddHandler frm.FormClosed, AddressOf Seite_FormClosed
+        pnlHost.Controls.Add(frm)
+        aktiveSeite = frm
+        pnlAngebot.Visible = False
+        pnlHost.Visible = True
+        frm.Show()
+        frm.Focus()
+    End Sub
+
+    ' "Abbrechen", "Speichern" (Einstellungen) oder Esc schließen die Seite → zurück zu den Angeboten
+    Private Sub Seite_FormClosed(sender As Object, e As FormClosedEventArgs)
+        aktiveSeite = Nothing
+        BeginInvoke(New Action(Sub() ZeigeSeite(navAngebote)))
+    End Sub
+
+    Private Sub lnkAbmelden_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles lnkAbmelden.LinkClicked
+        If FlowLayoutPanel1.Controls.Count > 0 AndAlso Not "gespeichert".Equals(lblSpeicherStatus.Tag) AndAlso
+           MessageBox.Show("Das aktuelle Angebot ist noch nicht gespeichert. Trotzdem abmelden?", "Abmelden",
+                           MessageBoxButtons.YesNo, MessageBoxIcon.Question) <> DialogResult.Yes Then Return
+        Application.Restart()     ' startet mit Lizenzprüfung und Anmeldung neu
+    End Sub
+
+    ' Positionsliste (Tabelle unter den Karten): standardmäßig ausgeblendet, über den Link im Kopf einblendbar.
+    ' Sie wird weiter intern für PDF/WhatsApp (Häkchen "Select") verwendet.
+    Private positionslisteAnzeigen As Boolean = False
+
+    Private Sub lnkPositionsliste_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles lnkPositionsliste.LinkClicked
+        positionslisteAnzeigen = Not positionslisteAnzeigen
+        TabelleSichtbarkeit()
+    End Sub
+
+    Private Sub PositionslisteEinrichten()
+        Tema.GridStil(DataGridView1)
+        With DataGridView1
+            .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None
+            If .Columns.Contains("Select") Then
+                .Columns("Select").Width = 44
+                .Columns("Select").HeaderText = "PDF"
+            End If
+            If .Columns.Contains("ProduktID") Then
+                .Columns("ProduktID").HeaderText = "Nr."
+                .Columns("ProduktID").Width = 70
+            End If
+            If .Columns.Contains("ProduktName") Then
+                .Columns("ProduktName").HeaderText = "Produkt"
+                .Columns("ProduktName").Width = 260
+            End If
+            If .Columns.Contains("Beschreibung") Then .Columns("Beschreibung").AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            If .Columns.Contains("Preis") Then
+                .Columns("Preis").HeaderText = "Preis (€)"
+                .Columns("Preis").Width = 110
+                .Columns("Preis").DefaultCellStyle.Format = "N2"
+                .Columns("Preis").DefaultCellStyle.FormatProvider = Globalization.CultureInfo.GetCultureInfo("de-DE")
+                .Columns("Preis").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+                .Columns("Preis").HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleRight
+            End If
+        End With
+    End Sub
+
+    Private Sub TabelleSichtbarkeit()
+        lnkPositionsliste.Visible = DataGridView1.Rows.Count > 0
+        lnkPositionsliste.Text = If(positionslisteAnzeigen, "Positionsliste ausblenden", "Positionsliste anzeigen")
+        Dim sichtbar As Boolean = positionslisteAnzeigen AndAlso DataGridView1.Rows.Count > 0
+        If DataGridView1.Visible <> sichtbar Then
+            DataGridView1.Visible = sichtbar
+            pnlAbstand.Visible = sichtbar
         End If
     End Sub
 
+    Private Sub DataGridView1_ZeilenGeaendert(sender As Object, e As EventArgs) Handles DataGridView1.DataBindingComplete, DataGridView1.RowsAdded, DataGridView1.RowsRemoved, DataGridView1.DataSourceChanged
+        TabelleSichtbarkeit()
+    End Sub
+
+    ' Zeigt im Kopf, ob das Angebot schon in der Datenbank liegt
+    Private Sub SetzeSpeicherStatus(gespeichert As Boolean)
+        lblSpeicherStatus.Tag = If(gespeichert, "gespeichert", "neu")
+        If gespeichert Then
+            lblSpeicherStatus.Text = "Gespeichert ✓"
+            lblSpeicherStatus.ForeColor = Color.FromArgb(129, 214, 160)
+        Else
+            lblSpeicherStatus.Text = "Neu – noch nicht gespeichert"
+            lblSpeicherStatus.ForeColor = Color.FromArgb(255, 196, 87)
+        End If
+    End Sub
+
+    Private Sub DataGridView1_DataError(sender As Object, e As DataGridViewDataErrorEventArgs) _
+            Handles DataGridView1.DataError
+        e.Cancel = True
+    End Sub
+
     Public Sub DATAGRİD_1_RENKLENDIR()
-
-        DataGridView1.RowsDefaultCellStyle.BackColor = Color.GhostWhite
-        DataGridView1.AlternatingRowsDefaultCellStyle.BackColor = Color.Gainsboro
-
-        DataGridView1.ColumnHeadersDefaultCellStyle.Font =
-    New System.Drawing.Font("Segoe UI", 12.0F, System.Drawing.FontStyle.Bold)
-
-        DataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.Gainsboro
-        DataGridView1.EnableHeadersVisualStyles = False
-
-        DataGridView1.RowHeadersVisible = False
-
+        Tema.GridStil(DataGridView1)
     End Sub
     Private Sub FlowLayoutPanel1_Paint(sender As Object, e As PaintEventArgs) Handles FlowLayoutPanel1.Paint
-        Dim borderColor As Color = Color.FromArgb(180, 180, 180)
+        Dim borderColor As Color = Tema.Rahmen
         Dim borderWidth As Integer = 1
 
         Using pen As New Pen(borderColor, borderWidth)
@@ -278,6 +394,8 @@ Handles cmbAngebotNr.SelectedIndexChanged
         End If
 
         LoadProductsBasedOnAngebotNr(selectedAngebotNr)
+        SetzeSpeicherStatus(True)
+        BeginInvoke(New Action(Sub() ActiveControl = Nothing))
 
         If DataGridView1.Columns.Contains("Select") Then
             DataGridView1.Columns("Select").Width = 25
@@ -353,8 +471,6 @@ Handles cmbAngebotNr.SelectedIndexChanged
         With DataGridView1
             .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
             .RowTemplate.Height = 32
-            .ColumnHeadersDefaultCellStyle.Font = New System.Drawing.Font("Segoe UI", 10, FontStyle.Bold)
-            .DefaultCellStyle.Font = New System.Drawing.Font("Segoe UI", 10)
             .SelectionMode = DataGridViewSelectionMode.FullRowSelect
             .ReadOnly = True
         End With
@@ -397,17 +513,24 @@ Handles cmbAngebotNr.SelectedIndexChanged
         Next
     End Sub
     Private Sub Card_Focused(productID As Integer)
+        If Not DataGridView1.Columns.Contains("ProduktID") Then Return
         For Each row As DataGridViewRow In DataGridView1.Rows
-            If CInt(row.Cells("ID").Value) = productID Then
+            If Not IsDBNull(row.Cells("ProduktID").Value) AndAlso CInt(row.Cells("ProduktID").Value) = productID Then
                 row.Selected = True
-                DataGridView1.CurrentCell = row.Cells("ID")
+                DataGridView1.CurrentCell = row.Cells("ProduktID")
                 Exit For
             End If
         Next
     End Sub
 
     Private Sub LoadProductsBasedOnAngebotNr(angebotNr As String)
+        ' Alte Karten entfernen und freigeben
+        Dim alteKarten = FlowLayoutPanel1.Controls.Cast(Of Control)().ToList()
         FlowLayoutPanel1.Controls.Clear()
+        For Each k In alteKarten
+            k.Dispose()
+        Next
+        FlowLayoutPanel1.SuspendLayout()
 
         Dim angebotID As Integer = -1
         Dim dt As New DataTable()
@@ -415,16 +538,20 @@ Handles cmbAngebotNr.SelectedIndexChanged
         ' 1) AngebotID al
         Using con As New SqlConnection(connectionString)
             con.Open()
-            Dim cmd As New SqlCommand("SELECT AngebotID FROM AngebotListe WHERE AngebotNr = @AngebotNr", con)
+            Dim cmd As New SqlCommand("SELECT TOP 1 AngebotID, Datum FROM AngebotListe WHERE AngebotNr = @AngebotNr ORDER BY AngebotID DESC", con)
             cmd.Parameters.AddWithValue("@AngebotNr", angebotNr)
 
-            Dim result = cmd.ExecuteScalar()
-            If result Is Nothing Then
-                MessageBox.Show("Seçilen AngebotNr için teklif bulunamadı.")
-                Exit Sub
-            End If
-
-            angebotID = Convert.ToInt32(result)
+            Using rd = cmd.ExecuteReader()
+                If Not rd.Read() Then
+                    FlowLayoutPanel1.ResumeLayout()
+                    MessageBox.Show("Das ausgewählte Angebot wurde nicht gefunden.")
+                    Exit Sub
+                End If
+                angebotID = Convert.ToInt32(rd("AngebotID"))
+                ' Kopf zeigt jetzt das geöffnete Angebot (vorher blieb die neue Nummer stehen)
+                txtAngebotNr.Text = angebotNr
+                If Not IsDBNull(rd("Datum")) Then dtpDatum.Value = CDate(rd("Datum"))
+            End Using
         End Using
 
         ' 2) Ürünleri çek
@@ -486,6 +613,7 @@ Handles cmbAngebotNr.SelectedIndexChanged
                 productCard.Preis.ToString("0.##", Globalization.CultureInfo.GetCultureInfo("de-DE"))
 
                 AddHandler productCard.CardFocused, AddressOf Card_Focused
+                AddHandler productCard.PriceChanged, AddressOf UpdatePriceFromCard
 
                 FlowLayoutPanel1.Controls.Add(productCard)
             Next
@@ -495,8 +623,11 @@ Handles cmbAngebotNr.SelectedIndexChanged
                 dt.Columns.Remove("Bild")
             End If
 
+            FlowLayoutPanel1.ResumeLayout()
+
             ' DataGridView doldur
             DataGridView1.DataSource = dt
+            PositionslisteEinrichten()
             With DataGridView1
                 .AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
                 .RowTemplate.Height = 32
@@ -606,6 +737,7 @@ Handles cmbAngebotNr.SelectedIndexChanged
 
         CreatePdfFromSelectedCards2(angebotNr)
 
+        SetzeSpeicherStatus(True)
         MessageBox.Show("✔ Angebot erstellt und PDF erzeugt.")
 
     End Sub
@@ -632,7 +764,47 @@ Handles cmbAngebotNr.SelectedIndexChanged
         End Using
     End Function
     Private Sub btnNeueProdukt_Click(sender As Object, e As EventArgs) Handles btnNeueProdukt.Click
+        Dim karte = NeueKarte()
+        FlowLayoutPanel1.ScrollControlIntoView(karte)
+        UpdateProduktCount()
+    End Sub
 
+    ' Mehrere Produkte auf einmal auswählen; je Produkt eine gefüllte Karte.
+    ' Vorhandene Karten bleiben unverändert, neue kommen ans Ende.
+    Private Sub ProdukteHinzufuegen()
+        Dim vorhanden As New HashSet(Of Integer)
+        For Each k In FlowLayoutPanel1.Controls.OfType(Of ProductCard)()
+            If k.ProductID.HasValue AndAlso k.ProductID.Value > 0 Then vorhanden.Add(k.ProductID.Value)
+        Next
+
+        Using suche As New FrmProduktSuche()
+            suche.MehrfachAuswahl = True
+            suche.VorhandeneIds = vorhanden
+            If suche.ShowDialog(Me) <> DialogResult.OK OrElse suche.AusgewaehlteProdukte.Count = 0 Then Return
+
+            Cursor = Cursors.WaitCursor
+            FlowLayoutPanel1.SuspendLayout()
+            Dim erste As ProductCard = Nothing
+            Try
+                For Each zeile In suche.AusgewaehlteProdukte
+                    Dim karte = NeueKarte()
+                    karte.ProduktUebernehmen(zeile)
+                    If erste Is Nothing Then erste = karte
+                Next
+            Finally
+                FlowLayoutPanel1.ResumeLayout()
+                Cursor = Cursors.Default
+            End Try
+            If erste IsNot Nothing Then FlowLayoutPanel1.ScrollControlIntoView(erste)
+            UpdateProduktCount()
+        End Using
+    End Sub
+
+    Private Sub btnProdukteHinzufuegen_Click(sender As Object, e As EventArgs) Handles btnProdukteHinzufuegen.Click
+        ProdukteHinzufuegen()
+    End Sub
+
+    Private Function NeueKarte() As ProductCard
         Dim newCard As New ProductCard()
 
         newCard.ProductID = 0
@@ -647,9 +819,8 @@ Handles cmbAngebotNr.SelectedIndexChanged
         AddHandler newCard.CardRemoved, AddressOf UpdateProduktCount   ' ⭐ EKLENMESİ GEREKEN SATIR
 
         FlowLayoutPanel1.Controls.Add(newCard)
-        FlowLayoutPanel1.ScrollControlIntoView(newCard)
-        UpdateProduktCount()
-    End Sub
+        Return newCard
+    End Function
 
 
 
@@ -682,7 +853,7 @@ Handles cmbAngebotNr.SelectedIndexChanged
     Private Sub CreatePdfFromSelectedCards(selectedCards As List(Of ProductCard))
         Dim angebotNr As String = cmbAngebotNr.SelectedItem.ToString()
         Dim angebotDatum As String = DateTime.Now.ToString("dd.MM.yyyy")
-        Dim savePath As String = $"C:\AngebotListe\WhatsapaYollanilan\{angebotNr}.pdf"
+        Dim savePath As String = Einstellungen.PdfPfad(angebotNr)
 
         Dim doc As New Document(PageSize.A4, 20, 20, 20, 20)
         Dim writer = PdfWriter.GetInstance(doc, New IO.FileStream(savePath, IO.FileMode.Create))
@@ -745,7 +916,7 @@ Handles cmbAngebotNr.SelectedIndexChanged
     Private Sub CreatePdfFromGridSelection()
         Dim angebotNr As String = cmbAngebotNr.SelectedItem.ToString()
         Dim angebotDatum As String = DateTime.Now.ToString("dd.MM.yyyy")
-        Dim savePath As String = $"C:\AngebotListe\WhatsapaYollanilan\{angebotNr}.pdf"
+        Dim savePath As String = Einstellungen.PdfPfad(angebotNr)
 
         Dim doc As New Document(PageSize.A4, 20, 20, 20, 20)
         PdfWriter.GetInstance(doc, New IO.FileStream(savePath, IO.FileMode.Create))
@@ -931,7 +1102,7 @@ Handles DataGridView1.SelectionChanged
     Private Sub CreatePdfFromGridSelection(selectedRows As List(Of DataGridViewRow))
         Dim angebotNr As String = cmbAngebotNr.SelectedItem.ToString()
         Dim angebotDatum As String = DateTime.Now.ToString("dd.MM.yyyy")
-        Dim savePath As String = $"C:\AngebotListe\WhatsapaYollanilan\{angebotNr}.pdf"
+        Dim savePath As String = Einstellungen.PdfPfad(angebotNr)
 
         Dim doc As New Document(PageSize.A4, 20, 20, 20, 20)
         Dim writer = PdfWriter.GetInstance(doc, New IO.FileStream(savePath, IO.FileMode.Create))
@@ -1096,7 +1267,7 @@ Handles DataGridView1.SelectionChanged
         End If
 
         Dim angebotDatum As String = DateTime.Now.ToString("dd.MM.yyyy")
-        Dim savePath As String = $"C:\AngebotListe\WhatsapaYollanilan\{angebotNr}.pdf"
+        Dim savePath As String = Einstellungen.PdfPfad(angebotNr)
 
         Dim selectedCards As New List(Of ProductCard)
 
@@ -1794,7 +1965,7 @@ Handles DataGridView1.SelectionChanged
     End Sub
 
     Private Sub Button10_Click(sender As Object, e As EventArgs) Handles Button10.Click
-        Form2.Show()
+        ' (Form2 wurde entfernt – war ein leeres Testformular)
     End Sub
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
@@ -2347,6 +2518,7 @@ Handles DataGridView1.SelectionChanged
         End Using
 
         LoadProductsBasedOnAngebotNr(angebotNr)
+        SetzeSpeicherStatus(True)
         MessageBox.Show("Produkt erfolgreich aktualisiert.")
     End Sub
 
@@ -2354,6 +2526,8 @@ Handles DataGridView1.SelectionChanged
 
     Private Sub Button16_Click(sender As Object, e As EventArgs) Handles Button16.Click
         ResetAngebotForm()
+        ' Neues Angebot öffnet direkt die Produktauswahl (mehrere Produkte auf einmal)
+        ProdukteHinzufuegen()
     End Sub
 
     Private Sub ResetAngebotForm()
@@ -2364,17 +2538,26 @@ Handles DataGridView1.SelectionChanged
         ' Tarihi bugüne çek
         dtpDatum.Value = DateTime.Now
 
-        ' Ürün kartlarını temizle
+        ' Ürün kartlarını temizle (ve belleği serbest bırak)
+        Dim alteKarten = FlowLayoutPanel1.Controls.Cast(Of Control)().ToList()
         FlowLayoutPanel1.Controls.Clear()
+        For Each k In alteKarten
+            k.Dispose()
+        Next
+
+        ' Seçili eski teklif seçimini kaldır (olay tetiklenmeden)
+        isInternalUpdate = True
+        cmbAngebotNr.SelectedIndex = -1
+        isInternalUpdate = False
 
         ' DataGrid temizle (DOĞRU YÖNTEM)
         DataGridView1.DataSource = Nothing
 
-        ' Form üzerindeki alanları sıfırla
-        Label1.Text = ""
+        ' (Früher wurde hier Label1.Text geleert – dadurch verschwand die Beschriftung "Angebot-Nr.")
 
         ' Ürün sayısını güncelle
         UpdateProduktCount()
+        SetzeSpeicherStatus(False)
 
     End Sub
 
@@ -2505,7 +2688,7 @@ Handles DataGridView1.SelectionChanged
 
     Private Sub Button18_Click(sender As Object, e As EventArgs) Handles Button18.Click
 
-        Dim folder As String = "C:\AngebotListe\WhatsapaYollanilan\"
+        Dim folder As String = Einstellungen.PdfOrdnerPfad()
         If Not Directory.Exists(folder) Then Directory.CreateDirectory(folder)
 
         Dim angebotNr As String = txtAngebotNr.Text.Trim()
@@ -2832,7 +3015,7 @@ Handles DataGridView1.SelectionChanged
     ' Aynı txt dosyasını kullanır: Name|Telefon
     ' ═══════════════════════════════════════════════════════════════════
     Private Function ZeigeKontaktAuswahlMulti() As List(Of Tuple(Of String, String))
-        Dim kontaktFile As String = "C:\AngebotListe\whatsapp_kontakte.txt"
+        Dim kontaktFile As String = Einstellungen.KontaktDatei
         If Not Directory.Exists("C:\AngebotListe\") Then Directory.CreateDirectory("C:\AngebotListe\")
         If Not File.Exists(kontaktFile) Then
             File.WriteAllText(kontaktFile, "Test|4915734412344" & Environment.NewLine)
@@ -2981,7 +3164,7 @@ Handles DataGridView1.SelectionChanged
     ' Format her satır: "Anzeigename|49xxxxxxxxxx"
     ' ═══════════════════════════════════════════════════════════════════
     Private Function ZeigeKontaktAuswahl() As Tuple(Of String, String)
-        Dim kontaktFile As String = "C:\AngebotListe\whatsapp_kontakte.txt"
+        Dim kontaktFile As String = Einstellungen.KontaktDatei
         If Not Directory.Exists("C:\AngebotListe\") Then Directory.CreateDirectory("C:\AngebotListe\")
         If Not File.Exists(kontaktFile) Then
             File.WriteAllText(kontaktFile, "Test|4915734412344" & Environment.NewLine)
