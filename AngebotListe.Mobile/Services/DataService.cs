@@ -1,72 +1,105 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
 using AngebotListe.Mobile.Models;
-using Microsoft.Data.SqlClient;
 
 namespace AngebotListe.Mobile.Services;
 
+// Alle Daten kommen jetzt über die AngebotListe-API auf dem PC "kankon"
+// (sabit adres über Tailscale Funnel, wie Yolcu Transport und KankonSite).
+// SQL-Zugangsdaten stehen nicht mehr in der App.
 public static class DataService
 {
-    // ⚠️ Bağlantı dizisi tek yerde — değiştirmek için sadece burası
-    private const string ConnectionString =
-        "Data Source=185.187.170.107;Initial Catalog=AngebotListe;" +
-        "User Id=salih;Password=Garahi1943;TrustServerCertificate=True;" +
-        "Encrypt=False;Connection Timeout=10;";
+    // ⚠️ Sunucu adresi tek yerde — C:\AngebotListe\AngebotListe\Sunucu\ADRES.txt ile aynı olmalı
+    public const string ServerAdresse = "https://kankon.taila21b62.ts.net:10000";
 
-    public static string GetConnectionString() => ConnectionString;
+    private static readonly HttpClient Http = new()
+    {
+        BaseAddress = new Uri(ServerAdresse),
+        Timeout = TimeSpan.FromSeconds(30)
+    };
 
-    private static SqlConnection NewConn() => new(ConnectionString);
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+
+    // Token wird gespeichert, damit die App nach dem Neustart angemeldet bleibt
+    private static string? _token = Preferences.Get("api_token", (string?)null);
+
+    // Wird ausgelöst, wenn die Anmeldung abgelaufen ist (z. B. nach Neustart des Servers)
+    public static event Action? AnmeldungAbgelaufen;
+
+    private static HttpRequestMessage Anfrage(HttpMethod m, string url, object? body = null)
+    {
+        var r = new HttpRequestMessage(m, url);
+        if (_token != null) r.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+        if (body != null) r.Content = JsonContent.Create(body, options: Json);
+        return r;
+    }
+
+    private static async Task<HttpResponseMessage> Senden(HttpMethod m, string url, object? body = null)
+    {
+        var res = await Http.SendAsync(Anfrage(m, url, body));
+        if (res.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            Abmelden();
+            MainThread.BeginInvokeOnMainThread(() => AnmeldungAbgelaufen?.Invoke());
+        }
+        return res;
+    }
+
+    private static async Task<T?> Laden<T>(string url)
+    {
+        using var res = await Senden(HttpMethod.Get, url);
+        if (!res.IsSuccessStatusCode) return default;
+        return await res.Content.ReadFromJsonAsync<T>(Json);
+    }
+
+    private static async Task<string> Fehlertext(HttpResponseMessage res)
+    {
+        try
+        {
+            var e = await res.Content.ReadFromJsonAsync<JsonElement>(Json);
+            if (e.TryGetProperty("error", out var t)) return t.GetString() ?? res.ReasonPhrase ?? "";
+        }
+        catch { }
+        return $"Serverfehler ({(int)res.StatusCode})";
+    }
+
+    public static void Abmelden()
+    {
+        _token = null;
+        Preferences.Remove("api_token");
+        Preferences.Set("logged_in", false);
+    }
+
+    // Für die Übertragung nur die Datenfelder (keine Bild-/Anzeige-Hilfsfelder)
+    private static object Dto(Product p) => new { p.ProduktId, p.Name, p.Beschreibung, p.Preis, p.Bild };
 
     // ═══════════════════════════════════════════════════════════════════
     // AUTHENTICATION
     // ═══════════════════════════════════════════════════════════════════
+    private record LoginAntwort(string Token, int UserId, string Username, string Role);
+
     public static async Task<(bool Success, string Message, int UserId, string Username, string Role)>
         AuthenticateAsync(string username, string password)
     {
         if (string.IsNullOrWhiteSpace(username))
             return (false, "Benutzername darf nicht leer sein.", 0, "", "");
-
         try
         {
-            using var con = NewConn();
-            await con.OpenAsync();
-
-            using var cmd = new SqlCommand(
-                "SELECT TOP 1 Id, Username, PasswordHash, Role, IsActive FROM Users WHERE Username = @u", con);
-            cmd.Parameters.AddWithValue("@u", username.Trim());
-
-            using var rd = await cmd.ExecuteReaderAsync();
-            if (!await rd.ReadAsync())
-                return (false, "Benutzername oder Passwort falsch.", 0, "", "");
-
-            var isActive = rd["IsActive"] != DBNull.Value && (bool)rd["IsActive"];
-            if (!isActive)
-                return (false, "Dieser Benutzer ist deaktiviert.", 0, "", "");
-
-            var storedHash = rd["PasswordHash"] == DBNull.Value ? "" : (string)rd["PasswordHash"];
-
-            // BCrypt veya plain text karşılaştırma
-            bool ok;
-            if (!string.IsNullOrEmpty(storedHash) &&
-                (storedHash.StartsWith("$2a$") || storedHash.StartsWith("$2b$") || storedHash.StartsWith("$2y$")))
-            {
-                try { ok = BCrypt.Net.BCrypt.Verify(password, storedHash); }
-                catch { ok = false; }
-            }
-            else
-            {
-                ok = (storedHash == password);
-            }
-
-            if (!ok)
-                return (false, "Benutzername oder Passwort falsch.", 0, "", "");
-
-            var id = Convert.ToInt32(rd["Id"]);
-            var uname = rd["Username"] as string ?? "";
-            var role = rd["Role"] as string ?? "User";
-            return (true, "Erfolgreich angemeldet.", id, uname, role);
+            using var res = await Http.SendAsync(Anfrage(HttpMethod.Post, "/api/login",
+                new { username = username.Trim(), password }));
+            if (!res.IsSuccessStatusCode)
+                return (false, await Fehlertext(res), 0, "", "");
+            var a = await res.Content.ReadFromJsonAsync<LoginAntwort>(Json);
+            if (a == null) return (false, "Unerwartete Antwort vom Server.", 0, "", "");
+            _token = a.Token;
+            Preferences.Set("api_token", a.Token);
+            return (true, "Erfolgreich angemeldet.", a.UserId, a.Username, a.Role);
         }
         catch (Exception ex)
         {
-            return (false, "Fehler: " + ex.Message, 0, "", "");
+            return (false, "Server nicht erreichbar. Bitte Internetverbindung prüfen.\n" + ex.Message, 0, "", "");
         }
     }
 
@@ -75,43 +108,16 @@ public static class DataService
     // ═══════════════════════════════════════════════════════════════════
     public static async Task<List<Product>> GetProductsAsync(string? search = null)
     {
-        var list = new List<Product>();
         try
         {
-            using var con = NewConn();
-            await con.OpenAsync();
-
-            var sql = "SELECT ProduktId, ProduktNr, Name, Beschreibung, Preis, Kategorie, Aktiv, Bild " +
-                      "FROM Products WHERE Aktiv = 1";
-            if (!string.IsNullOrWhiteSpace(search))
-                sql += " AND (Name LIKE @s OR Beschreibung LIKE @s OR ProduktNr LIKE @s)";
-            sql += " ORDER BY Name";
-
-            using var cmd = new SqlCommand(sql, con);
-            if (!string.IsNullOrWhiteSpace(search))
-                cmd.Parameters.AddWithValue("@s", "%" + search + "%");
-
-            using var rd = await cmd.ExecuteReaderAsync();
-            while (await rd.ReadAsync())
-            {
-                list.Add(new Product
-                {
-                    ProduktId = rd.GetInt32(rd.GetOrdinal("ProduktId")),
-                    ProduktNr = rd["ProduktNr"] as string,
-                    Name = rd["Name"] as string,
-                    Beschreibung = rd["Beschreibung"] as string,
-                    Preis = rd["Preis"] == DBNull.Value ? 0 : Convert.ToDecimal(rd["Preis"]),
-                    Kategorie = rd["Kategorie"] as string,
-                    Aktiv = rd["Aktiv"] != DBNull.Value && (bool)rd["Aktiv"],
-                    Bild = rd["Bild"] == DBNull.Value ? null : (byte[])rd["Bild"],
-                });
-            }
+            var url = "/api/products" + (string.IsNullOrWhiteSpace(search) ? "" : "?search=" + Uri.EscapeDataString(search));
+            return await Laden<List<Product>>(url) ?? new();
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine("GetProductsAsync error: " + ex.Message);
+            return new();
         }
-        return list;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -119,122 +125,35 @@ public static class DataService
     // ═══════════════════════════════════════════════════════════════════
     public static async Task<List<Angebot>> GetAngeboteAsync()
     {
-        var list = new List<Angebot>();
-        try
-        {
-            using var con = NewConn();
-            await con.OpenAsync();
-
-            using var cmd = new SqlCommand(
-                "SELECT a.AngebotID, a.AngebotNr, a.Datum, a.Beschreibung, " +
-                "  (SELECT COUNT(*) FROM AngebotProdukte ap WHERE ap.AngebotID = a.AngebotID) AS ProduktAnzahl " +
-                "FROM AngebotListe a ORDER BY a.AngebotID DESC", con);
-
-            using var rd = await cmd.ExecuteReaderAsync();
-            while (await rd.ReadAsync())
-            {
-                list.Add(new Angebot
-                {
-                    AngebotID = rd.GetInt32(rd.GetOrdinal("AngebotID")),
-                    AngebotNr = rd["AngebotNr"] as string,
-                    Datum = rd["Datum"] == DBNull.Value ? null : (DateTime?)rd["Datum"],
-                    Beschreibung = rd["Beschreibung"] as string,
-                    ProduktAnzahl = rd["ProduktAnzahl"] == DBNull.Value ? 0 : Convert.ToInt32(rd["ProduktAnzahl"]),
-                });
-            }
-        }
+        try { return await Laden<List<Angebot>>("/api/angebote") ?? new(); }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine("GetAngeboteAsync error: " + ex.Message);
+            return new();
         }
-        return list;
     }
 
     public static async Task<List<AngebotProdukt>> GetAngebotProdukteAsync(int angebotId)
     {
-        var list = new List<AngebotProdukt>();
-        try
-        {
-            using var con = NewConn();
-            await con.OpenAsync();
-
-            using var cmd = new SqlCommand(
-                "SELECT ID, AngebotID, ProduktID, ProduktName, Beschreibung, Preis, Bild " +
-                "FROM AngebotProdukte WHERE AngebotID = @aid", con);
-            cmd.Parameters.AddWithValue("@aid", angebotId);
-
-            using var rd = await cmd.ExecuteReaderAsync();
-            while (await rd.ReadAsync())
-            {
-                list.Add(new AngebotProdukt
-                {
-                    ID = rd.GetInt32(rd.GetOrdinal("ID")),
-                    AngebotID = rd.GetInt32(rd.GetOrdinal("AngebotID")),
-                    ProduktID = rd.GetInt32(rd.GetOrdinal("ProduktID")),
-                    ProduktName = rd["ProduktName"] as string,
-                    Beschreibung = rd["Beschreibung"] as string,
-                    Preis = rd["Preis"] == DBNull.Value ? 0 : Convert.ToDecimal(rd["Preis"]),
-                    Bild = rd["Bild"] == DBNull.Value ? null : (byte[])rd["Bild"],
-                });
-            }
-        }
+        try { return await Laden<List<AngebotProdukt>>($"/api/angebote/{angebotId}/produkte") ?? new(); }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine("GetAngebotProdukteAsync error: " + ex.Message);
+            return new();
         }
-        return list;
     }
+
+    private record IdAntwort(int AngebotID);
 
     public static async Task<int> CreateOrUpdateAngebotAsync(string angebotNr, List<Product> produkte)
     {
         try
         {
-            using var con = NewConn();
-            await con.OpenAsync();
-
-            // Var mı kontrol et
-            int angebotId;
-            using (var check = new SqlCommand(
-                "SELECT TOP 1 AngebotID FROM AngebotListe WHERE AngebotNr=@nr ORDER BY AngebotID DESC", con))
-            {
-                check.Parameters.AddWithValue("@nr", angebotNr);
-                var existing = await check.ExecuteScalarAsync();
-                if (existing != null && existing != DBNull.Value)
-                {
-                    angebotId = Convert.ToInt32(existing);
-                    using var del = new SqlCommand("DELETE FROM AngebotProdukte WHERE AngebotID=@aid", con);
-                    del.Parameters.AddWithValue("@aid", angebotId);
-                    await del.ExecuteNonQueryAsync();
-                }
-                else
-                {
-                    using var ins = new SqlCommand(
-                        "INSERT INTO AngebotListe (Datum, Beschreibung, AngebotNr) " +
-                        "VALUES (@d, @b, @nr); SELECT SCOPE_IDENTITY();", con);
-                    ins.Parameters.AddWithValue("@d", DateTime.Now);
-                    ins.Parameters.AddWithValue("@b", "Mobile App");
-                    ins.Parameters.AddWithValue("@nr", angebotNr);
-                    angebotId = Convert.ToInt32(await ins.ExecuteScalarAsync());
-                }
-            }
-
-            // Ürünleri ekle
-            foreach (var p in produkte)
-            {
-                using var cmd = new SqlCommand(
-                    "INSERT INTO AngebotProdukte (AngebotID, ProduktID, ProduktName, Beschreibung, Preis, Bild) " +
-                    "VALUES (@aid, @pid, @name, @desc, @preis, @bild)", con);
-                cmd.Parameters.AddWithValue("@aid", angebotId);
-                cmd.Parameters.AddWithValue("@pid", p.ProduktId);
-                cmd.Parameters.AddWithValue("@name", (object?)p.Name ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@desc", (object?)p.Beschreibung ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@preis", p.Preis);
-                cmd.Parameters.Add("@bild", System.Data.SqlDbType.VarBinary).Value =
-                    (object?)p.Bild ?? DBNull.Value;
-                await cmd.ExecuteNonQueryAsync();
-            }
-
-            return angebotId;
+            using var res = await Senden(HttpMethod.Post, "/api/angebote",
+                new { angebotNr, produkte = produkte.Select(Dto).ToList() });
+            if (!res.IsSuccessStatusCode) return -1;
+            var a = await res.Content.ReadFromJsonAsync<IdAntwort>(Json);
+            return a?.AngebotID ?? -1;
         }
         catch (Exception ex)
         {
@@ -247,20 +166,8 @@ public static class DataService
     {
         try
         {
-            using var con = NewConn();
-            await con.OpenAsync();
-
-            using (var del1 = new SqlCommand("DELETE FROM AngebotProdukte WHERE AngebotID=@aid", con))
-            {
-                del1.Parameters.AddWithValue("@aid", angebotId);
-                await del1.ExecuteNonQueryAsync();
-            }
-            using (var del2 = new SqlCommand("DELETE FROM AngebotListe WHERE AngebotID=@aid", con))
-            {
-                del2.Parameters.AddWithValue("@aid", angebotId);
-                await del2.ExecuteNonQueryAsync();
-            }
-            return true;
+            using var res = await Senden(HttpMethod.Delete, $"/api/angebote/{angebotId}");
+            return res.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
@@ -276,20 +183,8 @@ public static class DataService
     {
         try
         {
-            using var con = NewConn();
-            await con.OpenAsync();
-            using var cmd = new SqlCommand(
-                "INSERT INTO AngebotProdukte (AngebotID, ProduktID, ProduktName, Beschreibung, Preis, Bild) " +
-                "VALUES (@aid, @pid, @name, @desc, @preis, @bild)", con);
-            cmd.Parameters.AddWithValue("@aid", angebotId);
-            cmd.Parameters.AddWithValue("@pid", p.ProduktId);
-            cmd.Parameters.AddWithValue("@name", (object?)p.Name ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@desc", (object?)p.Beschreibung ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@preis", p.Preis);
-            cmd.Parameters.Add("@bild", System.Data.SqlDbType.VarBinary).Value =
-                (object?)p.Bild ?? DBNull.Value;
-            await cmd.ExecuteNonQueryAsync();
-            return true;
+            using var res = await Senden(HttpMethod.Post, $"/api/angebote/{angebotId}/produkte", Dto(p));
+            return res.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
@@ -302,19 +197,9 @@ public static class DataService
     {
         try
         {
-            using var con = NewConn();
-            await con.OpenAsync();
-            using var cmd = new SqlCommand(
-                "UPDATE AngebotProdukte SET ProduktName=@name, Beschreibung=@desc, Preis=@preis, Bild=@bild " +
-                "WHERE ID=@id", con);
-            cmd.Parameters.AddWithValue("@id", ap.ID);
-            cmd.Parameters.AddWithValue("@name", (object?)ap.ProduktName ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@desc", (object?)ap.Beschreibung ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@preis", ap.Preis);
-            cmd.Parameters.Add("@bild", System.Data.SqlDbType.VarBinary).Value =
-                (object?)ap.Bild ?? DBNull.Value;
-            await cmd.ExecuteNonQueryAsync();
-            return true;
+            using var res = await Senden(HttpMethod.Put, $"/api/positionen/{ap.ID}",
+                new { ap.ProduktName, ap.Beschreibung, ap.Preis, ap.Bild });
+            return res.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
@@ -327,12 +212,8 @@ public static class DataService
     {
         try
         {
-            using var con = NewConn();
-            await con.OpenAsync();
-            using var cmd = new SqlCommand("DELETE FROM AngebotProdukte WHERE ID=@id", con);
-            cmd.Parameters.AddWithValue("@id", angebotProduktId);
-            await cmd.ExecuteNonQueryAsync();
-            return true;
+            using var res = await Senden(HttpMethod.Delete, $"/api/positionen/{angebotProduktId}");
+            return res.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
@@ -342,31 +223,18 @@ public static class DataService
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // ANGEBOT NR — günlük artan numara (ANG-yyyyMMdd-NNNN)
+    // ANGEBOT NR — günlük artan numara (ANG-yyyyMMdd-NNNN), vergibt der Server
     // ═══════════════════════════════════════════════════════════════════
+    private record NrAntwort(string AngebotNr);
+
     public static async Task<string> NextAngebotNrAsync()
     {
-        var prefix = "ANG-" + DateTime.Now.ToString("yyyyMMdd") + "-";
         try
         {
-            using var con = NewConn();
-            await con.OpenAsync();
-            using var cmd = new SqlCommand(
-                "SELECT TOP 1 AngebotNr FROM AngebotListe " +
-                "WHERE AngebotNr LIKE @p + '%' ORDER BY AngebotNr DESC", con);
-            cmd.Parameters.AddWithValue("@p", prefix);
-            var last = await cmd.ExecuteScalarAsync() as string;
-            int n = 1;
-            if (!string.IsNullOrEmpty(last))
-            {
-                var parts = last.Split('-');
-                if (parts.Length >= 3 && int.TryParse(parts[2], out var num)) n = num + 1;
-            }
-            return prefix + n.ToString("D4");
+            var a = await Laden<NrAntwort>("/api/angebote/naechste-nr");
+            if (!string.IsNullOrEmpty(a?.AngebotNr)) return a.AngebotNr;
         }
-        catch
-        {
-            return prefix + "0001";
-        }
+        catch { }
+        return "ANG-" + DateTime.Now.ToString("yyyyMMdd") + "-0001";
     }
 }
