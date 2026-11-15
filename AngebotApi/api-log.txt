@@ -78,3 +78,11 @@
 15.11 19:21:59  GET /api/products = 200 (119 ms)
 15.11 19:37:04  GET /api/products = 200 (255 ms)
 15.11 19:40:27  GET /api/products = 200 (115 ms)
+15.11 19:45:38  Login: admin
+15.11 19:45:38  POST /api/login = 200 (112 ms)
+15.11 19:45:42  GET /api/products = 200 (137 ms)
+15.11 19:47:32  POST /api/products = 405 (0 ms)
+15.11 19:47:36  GET /api/products = 200 (91 ms)
+15.11 19:48:39  POST /api/products = 405 (0 ms)
+15.11 19:50:30  GET /api/products = 200 (98 ms)
+15.11 19:53:40  === AngebotListe API Start ===
