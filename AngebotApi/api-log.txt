@@ -76,3 +76,5 @@
 15.11 18:57:29  GET /api/products = 200 (96 ms)
 15.11 19:21:45  GET /api/products = 200 (247 ms)
 15.11 19:21:59  GET /api/products = 200 (119 ms)
+15.11 19:37:04  GET /api/products = 200 (255 ms)
+15.11 19:40:27  GET /api/products = 200 (115 ms)

@@ -8,6 +8,9 @@ public partial class App : Application
 	{
 		InitializeComponent();
 
+		// Immer helles Design: im iPhone-Dunkelmodus war der Text in den Eingabefeldern weiß auf weiß (unsichtbar)
+		UserAppTheme = AppTheme.Light;
+
 		// Anmeldung abgelaufen (z. B. Server neu gestartet) → zurück zur Anmeldung
 		Services.DataService.AnmeldungAbgelaufen += () =>
 		{

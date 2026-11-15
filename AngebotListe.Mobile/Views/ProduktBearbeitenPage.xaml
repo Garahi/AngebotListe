@@ -48,11 +48,15 @@
                 </Border>
             </Grid>
 
+            <!-- Hinweis Diktieren -->
+            <Label Text="🎤 Tipp: Feld antippen und auf der Tastatur das Mikrofon drücken – dann einfach sprechen."
+                   FontSize="12" TextColor="#5F6368" Margin="4,0"/>
+
             <!-- Produkt Name -->
             <Border Background="White" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Produkt Name" FontSize="11" TextColor="Gray"/>
-                    <Entry x:Name="txtName" FontSize="15"/>
+                    <Entry x:Name="txtName" FontSize="15" TextColor="#1C1B1F" PlaceholderColor="#9E9E9E" BackgroundColor="White" Placeholder="z. B. Tomaten" Keyboard="Text"/>
                 </VerticalStackLayout>
             </Border>
 
@@ -60,7 +64,7 @@
             <Border Background="White" StrokeThickness="0" StrokeShape="RoundRectangle 12" Padding="14">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Beschreibung" FontSize="11" TextColor="Gray"/>
-                    <Editor x:Name="txtBeschreibung" FontSize="14" HeightRequest="80" AutoSize="TextChanges"/>
+                    <Editor x:Name="txtBeschreibung" FontSize="14" MinimumHeightRequest="80" AutoSize="TextChanges" TextColor="#1C1B1F" PlaceholderColor="#9E9E9E" BackgroundColor="White" Placeholder="z. B. 10 kg Kiste – Klasse I" Keyboard="Text"/>
                 </VerticalStackLayout>
             </Border>
 
@@ -69,7 +73,7 @@
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Preis (€)" FontSize="11" TextColor="Gray"/>
                     <Entry x:Name="txtPreis" Keyboard="Numeric" FontSize="20" FontAttributes="Bold"
-                           TextColor="#1B5E20"/>
+                           TextColor="#1B5E20" BackgroundColor="White"/>
                 </VerticalStackLayout>
             </Border>
 
@@ -79,11 +83,11 @@
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                     <VerticalStackLayout Grid.Column="0" Spacing="8">
                         <Label Text="Art.-Nr." FontSize="11" TextColor="Gray"/>
-                        <Entry x:Name="txtProduktNr" FontSize="15"/>
+                        <Entry x:Name="txtProduktNr" FontSize="15" TextColor="#1C1B1F" PlaceholderColor="#9E9E9E" BackgroundColor="White"/>
                     </VerticalStackLayout>
                     <VerticalStackLayout Grid.Column="1" Spacing="8">
                         <Label Text="Kategorie" FontSize="11" TextColor="Gray"/>
-                        <Entry x:Name="txtKategorie" FontSize="15"/>
+                        <Entry x:Name="txtKategorie" FontSize="15" TextColor="#1C1B1F" PlaceholderColor="#9E9E9E" BackgroundColor="White" Placeholder="Obst / Gemüse" Keyboard="Text"/>
                     </VerticalStackLayout>
                 </Grid>
             </Border>

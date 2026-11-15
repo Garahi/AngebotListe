@@ -31,7 +31,7 @@ public partial class ProduktListePage : ContentPage
         busy.IsRunning = false;
         busy.IsVisible = false;
         lblLeer.Text = string.IsNullOrWhiteSpace(search) ? "Keine Produkte – oben rechts „＋ Neu“" : "Keine Treffer";
-        lblAnzahl.Text = $"{_items.Count} Produkte · Tippen = bearbeiten · nach links wischen = löschen";
+        lblAnzahl.Text = $"{_items.Count} Produkte · ✏️ = ändern · 🗑 = löschen";
     }
 
     private async void OnSucheChanged(object sender, TextChangedEventArgs e)
@@ -70,6 +70,19 @@ public partial class ProduktListePage : ContentPage
         };
         page.Geloescht += async id => await Loeschen(id, frage: false);
         await Navigation.PushAsync(page);
+    }
+
+    // Knöpfe in jeder Zeile
+    private async void OnAendernTapped(object sender, TappedEventArgs e)
+    {
+        if (e.Parameter is Product p) await Oeffnen(p);
+    }
+
+    private async void OnLoeschenTapped(object sender, TappedEventArgs e)
+    {
+        if (e.Parameter is not Product p) return;
+        if (!await DisplayAlert("Löschen?", $"„{p.Name}“ wirklich löschen?", "Löschen", "Abbrechen")) return;
+        await Loeschen(p.ProduktId, frage: false);
     }
 
     // ── Löschen ─────────────────────────────────────────
