@@ -2,8 +2,9 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0-android;net8.0-windows10.0.19041.0</TargetFrameworks>
-		<TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
-		<MauiVersion>8.0.100</MauiVersion>
+		<!-- Mac: nur iPhone, mit .NET 10 (wie KankonSite.Mobile). Windows: unverändert .NET 8 -->
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">net10.0-ios</TargetFrameworks>
+		<MauiVersion Condition="!$([MSBuild]::IsOSPlatform('osx'))">8.0.100</MauiVersion>
 		<CheckEolTargetFramework>false</CheckEolTargetFramework>
 		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
 
@@ -30,10 +31,10 @@
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 
 		<!-- Display name -->
-		<ApplicationTitle>AngebotListe.Mobile</ApplicationTitle>
+		<ApplicationTitle>AngebotListe</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.angebotliste.mobile</ApplicationId>
+		<ApplicationId>com.angebotliste.mobile</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -69,7 +70,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" Condition="!$([MSBuild]::IsOSPlatform('osx'))" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" Condition="$([MSBuild]::IsOSPlatform('osx'))" />
 		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
 	</ItemGroup>
