@@ -86,3 +86,12 @@
 15.11 19:48:39  POST /api/products = 405 (0 ms)
 15.11 19:50:30  GET /api/products = 200 (98 ms)
 15.11 19:53:40  === AngebotListe API Start ===
+15.11 19:58:13  GET /api/products = 401 (4 ms)
+15.11 19:58:32  Login: admin
+15.11 19:58:32  POST /api/login = 200 (228 ms)
+15.11 19:58:36  GET /api/products = 200 (33 ms)
+15.11 19:58:37  GET /api/products/4/bild?w=240&v=205411&t=GK97fG6%2BqeoAAUbypDwLuJ8CHnG%2FbTwBYR0MGhu1h8s%3D = 200 (145 ms)
+15.11 19:58:37  GET /api/products/12/bild?w=240&v=62158&t=GK97fG6%2BqeoAAUbypDwLuJ8CHnG%2FbTwBYR0MGhu1h8s%3D = 200 (144 ms)
+15.11 19:58:37  GET /api/products/1/bild?w=240&v=23058&t=GK97fG6%2BqeoAAUbypDwLuJ8CHnG%2FbTwBYR0MGhu1h8s%3D = 200 (158 ms)
+15.11 19:58:37  GET /api/products/5/bild?w=240&v=12494&t=GK97fG6%2BqeoAAUbypDwLuJ8CHnG%2FbTwBYR0MGhu1h8s%3D = 200 (129 ms)
+15.11 19:58:37  GET /api/products/2/bild?w=240&v=74372&t=GK97fG6%2BqeoAAUbypDwLuJ8CHnG%2FbTwBYR0MGhu1h8s%3D = 200 (151 ms)

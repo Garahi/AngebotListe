@@ -1,0 +1,4 @@
+/* Deutsch: sorgt dafür, dass iOS-Systemdialoge (Kamera: "Wiederholen / Foto verwenden") auf Deutsch erscheinen */
+"NSCameraUsageDescription" = "Zum Fotografieren von Produkten für Angebote.";
+"NSPhotoLibraryUsageDescription" = "Zum Auswählen von Produktfotos aus der Mediathek.";
+"NSPhotoLibraryAddUsageDescription" = "Zum Speichern aufgenommener Produktfotos.";
