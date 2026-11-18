@@ -5,11 +5,18 @@
              Title="Angebote"
              BackgroundColor="#F5F5F5">
 
-    <Grid Padding="10">
-        <RefreshView x:Name="refreshView" Refreshing="OnRefreshing">
+    <Grid Padding="10" RowDefinitions="Auto,Auto,*">
+        <!-- Suche -->
+        <SearchBar Grid.Row="0" x:Name="txtSuche"
+                   Placeholder="Angebot suchen (Nr., Datum, Beschreibung)..."
+                   TextChanged="OnSucheChanged" Margin="0,0,0,4"/>
+        <Label Grid.Row="1" x:Name="lblTreffer" FontSize="11" TextColor="Gray"
+               Margin="6,0,0,4" IsVisible="False"/>
+
+        <RefreshView Grid.Row="2" x:Name="refreshView" Refreshing="OnRefreshing">
             <CollectionView x:Name="cvAngebote" SelectionMode="Single" SelectionChanged="OnSelectionChanged">
                 <CollectionView.EmptyView>
-                    <Label Text="Keine Angebote vorhanden" HorizontalOptions="Center"
+                    <Label x:Name="lblLeer" Text="Keine Angebote vorhanden" HorizontalOptions="Center"
                            VerticalOptions="Center" TextColor="Gray" FontSize="14"/>
                 </CollectionView.EmptyView>
 

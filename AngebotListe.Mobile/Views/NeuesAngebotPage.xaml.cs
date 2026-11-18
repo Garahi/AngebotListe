@@ -81,25 +81,80 @@ public partial class NeuesAngebotPage : ContentPage
     }
 
     private void OnSpeichernTapped(object sender, TappedEventArgs e) => OnSpeichernClicked(sender, e);
+    private void OnWhatsAppTapped(object sender, TappedEventArgs e) => OnWhatsAppClicked(sender, e);
 
-    private async void OnSpeichernClicked(object sender, EventArgs e)
+    private bool _laeuft;
+
+    // Speichert das Angebot; gibt die AngebotID zurück (-1 bei Fehler)
+    private async Task<int> Speichern()
     {
         if (_auswahl.Count == 0)
         {
             await DisplayAlert("Hinweis", "Bitte wählen Sie mindestens ein Produkt aus.", "OK");
-            return;
+            return -1;
         }
 
         var id = await DataService.CreateOrUpdateAngebotAsync(_angebotNr, _auswahl.ToList());
-        if (id > 0)
+        if (id <= 0) await DisplayAlert("Fehler", "Speichern fehlgeschlagen.", "OK");
+        return id;
+    }
+
+    private async void OnSpeichernClicked(object sender, EventArgs e)
+    {
+        if (_laeuft) return;
+        _laeuft = true;
+        try
         {
-            await DisplayAlert("OK",
-                $"Angebot {_angebotNr} mit {_auswahl.Count} Produkten gespeichert.", "OK");
+            var id = await Speichern();
+            if (id > 0)
+            {
+                await DisplayAlert("OK",
+                    $"Angebot {_angebotNr} mit {_auswahl.Count} Produkten gespeichert.", "OK");
+                await Navigation.PopAsync();
+            }
+        }
+        finally { _laeuft = false; }
+    }
+
+    // ── WhatsApp: erst automatisch speichern, dann Bild(er) teilen ──
+    private async void OnWhatsAppClicked(object sender, EventArgs e)
+    {
+        if (_laeuft) return;
+        _laeuft = true;
+        try
+        {
+            var id = await Speichern();
+            if (id <= 0) return;
+
+            // Gespeicherte Produkte (mit IDs) laden und wie in der Detailansicht als Bild teilen
+            var produkte = await DataService.GetAngebotProdukteAsync(id);
+            var angebot = new Angebot
+            {
+                AngebotID = id,
+                AngebotNr = _angebotNr,
+                Datum = DateTime.Now,
+                ProduktAnzahl = produkte.Count,
+            };
+
+            try
+            {
+                var pfade = await AngebotBild.ErstellenAsync(angebot, produkte);
+                await Share.Default.RequestAsync(new ShareMultipleFilesRequest
+                {
+                    Title = $"Angebot {_angebotNr}",
+                    Files = pfade.Select(x => new ShareFile(x, "image/jpeg")).ToList(),
+                    PresentationSourceBounds = new Rect(0, 0, 0, 0),
+                });
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Hinweis",
+                    $"Angebot {_angebotNr} wurde gespeichert, aber das Teilen ist fehlgeschlagen:\n{ex.Message}", "OK");
+            }
+
+            // Angebot ist gespeichert → Seite schließen
             await Navigation.PopAsync();
         }
-        else
-        {
-            await DisplayAlert("Fehler", "Speichern fehlgeschlagen.", "OK");
-        }
+        finally { _laeuft = false; }
     }
 }

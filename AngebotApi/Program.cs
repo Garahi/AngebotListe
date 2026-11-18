@@ -30,7 +30,7 @@ app.Use(async (ctx, next) =>
 {
     var sw = System.Diagnostics.Stopwatch.StartNew();
     try { await next(); }
-    finally { Log($"{ctx.Request.Method} {ctx.Request.Path}{ctx.Request.QueryString} = {ctx.Response.StatusCode} ({sw.ElapsedMilliseconds} ms)"); }
+    finally { Log($"{ctx.Request.Method} {ctx.Request.Path}{System.Text.RegularExpressions.Regex.Replace(ctx.Request.QueryString.ToString(), "([?&]t=)[^&]*", "$1***")} = {ctx.Response.StatusCode} ({sw.ElapsedMilliseconds} ms)"); }
 });
 
 var sessions = new ConcurrentDictionary<string, Session>();

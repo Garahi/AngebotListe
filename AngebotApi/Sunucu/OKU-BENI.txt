@@ -1,0 +1,19 @@
+ANGEBOTLISTE API - 7/24 SUNUCUYA KURULUM
+========================================
+
+1. Bu ZIP'i sunucuya kopyalayin, sag tik -> "Alle extrahieren".
+2. Acilan klasorde KURULUM.bat'a cift tiklayin ("Ja" deyin).
+3. Pencere bitince ekranda yeni adres yazar, ornek:
+      https://<sunucu-adi>.taila21b62.ts.net:10000
+4. iPhone uygulamasinda girisde / ayarlarda "Server-Adresse" alanina bu adresi yazin.
+
+Bozulmayan seyler:
+- SQL Server: hicbir tablo/ayar degismez, API sadece baglanir.
+- Yolcu API (5080 / https 443) ve diger servisler aynen calismaya devam eder.
+- Tailscale zaten bagliysa adi ve girisi degismez; sadece 10000 portu eklenir.
+
+Guncelleme: yeni ZIP ile ayni adimlari tekrarlayin. Sunucudaki
+C:\AngebotApi\...\appsettings.json (SQL ayari) korunur.
+
+Kaldirma: Gorev Zamanlayici'da "AngebotListe API" gorevini silin,
+"tailscale funnel --https=10000 off" yazin, C:\AngebotApi klasorunu silin.

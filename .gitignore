@@ -78,3 +78,10 @@ logs/
 
 # Fertige Setup-Dateien (gross, werden lokal erzeugt)
 deploy/cikti/
+
+# Server-Logs und Pakete
+AngebotApi/api-log.txt
+AngebotApi/api-konsole.txt
+AngebotApi/build-log.txt
+AngebotApi/publish-log.txt
+*.zip
