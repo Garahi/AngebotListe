@@ -12,11 +12,11 @@ namespace AngebotListe.Mobile.Services;
 public static class DataService
 {
     // ⚠️ Sunucu adresi tek yerde — C:\AngebotListe\AngebotListe\Sunucu\ADRES.txt ile aynı olmalı
-    public const string ServerAdresse = "https://kankon.taila21b62.ts.net:10000";
+    // Alle APIs laufen über EINE Adresse, getrennt durch den Pfad (/angebot, /yolcu, ...)
+    public const string ServerAdresse = "https://kankon.taila21b62.ts.net/angebot";
 
     private static readonly HttpClient Http = new()
     {
-        BaseAddress = new Uri(ServerAdresse),
         Timeout = TimeSpan.FromSeconds(30)
     };
 
@@ -30,7 +30,8 @@ public static class DataService
 
     private static HttpRequestMessage Anfrage(HttpMethod m, string url, object? body = null)
     {
-        var r = new HttpRequestMessage(m, url);
+        // ServerAdresse + "/api/..." -> der Pfad /angebot bleibt erhalten
+        var r = new HttpRequestMessage(m, ServerAdresse + url);
         if (_token != null) r.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
         if (body != null) r.Content = JsonContent.Create(body, options: Json);
         return r;
